@@ -22,7 +22,7 @@ Three further studies probe the limits:
 - **Fine-tunes as patches.** Two fine-tunes of a super-resolution model merge as weight deltas in either order. They break a regression test, though, and no weight-space resolution meets the merge's specification.
 - **Old checkpoints as legacy code.** Applied to the first author's 2017–2020 Keras models, the same tools read training history from weights alone, compile refactors exactly and reject a plausible hotfix with a regression gate.
 
-Code, patches, git histories and models are released at https://github.com/v-code-895/wsse.
+Code, patches, git histories and models are released at https://github.com/v-code-895/wsse and archived at https://doi.org/10.5281/zenodo.23956114.
 
 ## 1. Introduction
 
@@ -538,7 +538,7 @@ Weight edits can be managed like code. Stored as hash-pinned, self-testing text 
 
 ## Appendix A: Reproducing the results
 
-Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse. The code is MIT-licensed; model weights and figures are CC BY-NC 4.0 because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, e.g. `python src/exp3_anime_weightpatch.py`.
+Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (v1.0.0: https://doi.org/10.5281/zenodo.23956115). The code is MIT-licensed; model weights and figures are CC BY-NC 4.0 because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, e.g. `python src/exp3_anime_weightpatch.py`.
 
 **Environment.**
 - CPU experiments (§7 and the anime generator) use Python 3.9.12, NumPy 1.22.4, Pillow 9.0.1, h5py 3.6.0 and scikit-image 0.19.2. Pillow is pinned because it draws the synthetic sprite tests.

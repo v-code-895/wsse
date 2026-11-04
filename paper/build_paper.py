@@ -136,23 +136,32 @@ def print_copy(html_path, tmp, max_width=1800, quality=90):
     out = os.path.join(tmp, "print.html"); open(out, "w", encoding="utf-8").write(page)
     return out
 
-def build_pdf(html_path, pdf_path, browser):
+def pdf_pages(path):
+    return len(re.findall(rb"/Type\s*/Page[^s]", open(path, "rb").read())) if os.path.exists(path) else 0
+
+def build_pdf(html_path, pdf_path, browser, attempts=3):
+    """Print with headless Chrome/Edge. If the CDN scripts load too late the page prints before the
+    Markdown is rendered (a one-page PDF with the title only), so check and retry."""
     tmp = tempfile.mkdtemp(prefix="wsse-pdf-")
     try:
         src = print_copy(html_path, tmp)
-        cmd = [browser, "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
-               f"--user-data-dir={os.path.join(tmp, 'profile')}", "--no-pdf-header-footer", "--print-to-pdf-no-header",
-               "--allow-file-access-from-files", "--virtual-time-budget=60000", f"--print-to-pdf={pdf_path}",
-               "file:///" + src.replace("\\", "/")]
-        subprocess.run(cmd, check=True, timeout=300, capture_output=True)
+        for k in range(attempts):
+            cmd = [browser, "--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check",
+                   f"--user-data-dir={os.path.join(tmp, f'profile{k}')}", "--no-pdf-header-footer", "--print-to-pdf-no-header",
+                   "--allow-file-access-from-files", "--virtual-time-budget=60000", f"--print-to-pdf={pdf_path}",
+                   "file:///" + src.replace("\\", "/")]
+            subprocess.run(cmd, check=True, timeout=300, capture_output=True)
+            if pdf_pages(pdf_path) > 1: return
+            print(f"   (attempt {k + 1}: the page printed before it rendered; retrying)")
+        raise SystemExit("the PDF has only a title page: check the internet connection (marked and MathJax load from a CDN)")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("--browser"); ap.add_argument("--html-only", action="store_true")
     ap.add_argument("--md", default=os.path.join(HERE, "wsse.md"))
-    a = ap.parse_args()
+    a = ap.parse_args(); a.md = os.path.abspath(a.md)
     out_html = os.path.splitext(a.md)[0] + ".html"; build_html(a.md, out_html); print("wrote", out_html)
     if not a.html_only:
         out_pdf = os.path.splitext(a.md)[0] + ".pdf"; build_pdf(out_html, out_pdf, find_browser(a.browser))
-        print("wrote", out_pdf, f"({os.path.getsize(out_pdf) / 1e6:.1f} MB)")
+        print("wrote", out_pdf, f"({os.path.getsize(out_pdf) / 1e6:.1f} MB, {pdf_pages(out_pdf)} pages)")

@@ -1,0 +1,17 @@
+G 8,133,283 params, D 7,260,001 params, 5153 images
+step 200  D 1.965  G 0.145  D(real) -0.14  D(fake) -0.14  0.367s/step
+step 400  D 1.999  G 0.079  D(real) -0.08  D(fake) -0.08  0.234s/step
+step 600  D 2.000  G 0.046  D(real) -0.05  D(fake) -0.05  0.233s/step
+step 800  D 2.000  G 0.025  D(real) -0.02  D(fake) -0.02  0.232s/step
+step 1000  D 2.000  G 0.002  D(real) -0.00  D(fake) -0.00  0.238s/step
+step 1200  D 2.000  G -0.001  D(real) +0.00  D(fake) +0.00  0.233s/step
+step 1400  D 2.000  G 0.012  D(real) -0.01  D(fake) -0.01  0.232s/step
+step 1600  D 2.000  G 0.009  D(real) -0.01  D(fake) -0.01  0.232s/step
+step 1800  D 2.000  G 0.012  D(real) -0.01  D(fake) -0.01  0.254s/step
+step 2000  D 2.000  G 0.009  D(real) -0.01  D(fake) -0.01  0.257s/step
+resumed at step 2000
+G 8,133,283 params, D 7,260,001 params, 5153 images
+step 2200  D 1.9648  G 0.0041  D(real) -0.0041  D(fake) -0.0041  gap -0.0000  0.754s/step
+step 2400  D 1.9994  G -0.0073  D(real) +0.0073  D(fake) +0.0073  gap -0.0000  0.581s/step
+step 2600  D 2.0000  G -0.0010  D(real) +0.0009  D(fake) +0.0009  gap -0.0000  0.609s/step
+step 2800  D 2.0000  G -0.0035  D(real) +0.0037  D(fake) +0.0037  gap -0.0000  0.589s/step

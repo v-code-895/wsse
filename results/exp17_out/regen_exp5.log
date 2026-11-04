@@ -1,0 +1,22 @@
+# Experiment 5: git for weights (CatGAN-26)
+
+Base weights `bf629f2a3ba0b126` (exp17_out\regen_s34000\exp13\catgan26_with_ops.npz). The repo holds only text: `base.json` and `patches/*.weightpatch.json`. `wpgit test` runs each patch's tests *in context*: the full build against the full build without that patch.
+
+## 1. Base repo
+## 2. Three feature branches
+## 3. Merge all three into main
+Three `git merge --no-ff` calls, all clean (each branch adds its own files).
+All patches compose: NO. Merged model hash `ad9c861bf9736e58`.
+
+## 4. Revert one feature
+After revert: hash `8ab0a9a81dc67613`. Built directly from {bright background, prune2, eye gate} without git: `8ab0a9a81dc67613` (match: True). Tests pass: True.
+
+## 5. A merge git accepts but the weights do not
+git merged both without complaint. The weight-level check:
+Cosines of the principal angles between the fur_lightness subspace (rank 2) and the background subspace (rank 4): 0.789, 0.385. The two clamps overlap, so whichever is applied second partly undoes the first.
+
+### Resolution: orthogonalise the background subspace against fur lightness
+New subspace is the background subspace minus its fur-lightness components (Gram-Schmidt); targets recomputed from [2.0, 0.0, 0.0, 0.0] to [2.128, -0.525, 1.469, -1.424] so that both locks keep their original targets together.
+The clamp pair now commutes. The check still flags lock-background against bright-background: one freezes the background coordinate, the other moves it, so whichever runs last wins. That is a genuine contradiction in intent, not a numerical one, so the resolution is a decision: the lock supersedes the brighten.
+
+[+] wrote exp17_out\regen_s34000\exp5/transcript.md and git repo exp17_out\regen_s34000\exp5\weightrepo

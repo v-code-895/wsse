@@ -1,0 +1,19 @@
+{
+ "format": "weightpatch/v0",
+ "id": "v1_ac_only",
+ "base": "c3003fa086c3bf20",
+ "description": "ablation: AC gain only",
+ "ops": [
+  {
+   "type": "scale_ac",
+   "layer": "conv2d_8",
+   "gain": 1.18
+  },
+  {
+   "type": "scale_ac",
+   "layer": "conv2d_9",
+   "gain": 1.25
+  }
+ ],
+ "changed_params": 102575
+}

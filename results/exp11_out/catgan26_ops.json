@@ -1,0 +1,152 @@
+[
+ {
+  "op": "dense",
+  "name": "dense",
+  "act": "linear"
+ },
+ {
+  "op": "reshape",
+  "shape": [
+   4,
+   4,
+   512
+  ]
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "up",
+  "size": [
+   2,
+   2
+  ]
+ },
+ {
+  "op": "conv",
+  "name": "b1c1",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "b1c2",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "up",
+  "size": [
+   2,
+   2
+  ]
+ },
+ {
+  "op": "conv",
+  "name": "b2c1",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "b2c2",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "up",
+  "size": [
+   2,
+   2
+  ]
+ },
+ {
+  "op": "conv",
+  "name": "b3c1",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "b3c2",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "up",
+  "size": [
+   2,
+   2
+  ]
+ },
+ {
+  "op": "conv",
+  "name": "b4c1",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "b4c2",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "up",
+  "size": [
+   2,
+   2
+  ]
+ },
+ {
+  "op": "conv",
+  "name": "b5c1",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "b5c2",
+  "act": "linear"
+ },
+ {
+  "op": "lrelu",
+  "alpha": 0.2
+ },
+ {
+  "op": "conv",
+  "name": "out",
+  "act": "linear"
+ },
+ {
+  "op": "noop"
+ }
+]

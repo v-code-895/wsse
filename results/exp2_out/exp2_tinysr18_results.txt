@@ -1,0 +1,14 @@
+========================================================================
+EXPERIMENT 2 RESULTS: ZERO-GRADIENT WEIGHT PATCH ON DLSS GENERATOR.H5
+========================================================================
+[Patch 1] conv2d_9/bias:0 | Old: [0.08977 0.04612 0.03382] -> New: [0. 0. 0.]
+[Patch 2] conv2d_8/kernel:0 | AC High-Freq Gain: 1.18x | LowPassRatio: 0.319 -> 0.274
+[Patch 2] conv2d_9/kernel:0 | AC High-Freq Gain: 1.25x | LowPassRatio: 0.216 -> 0.174
+------------------------------------------------------------------------
+REGRESSION SUITE A (Smooth Natural Gradients):
+   Original Weights -> PSNR: 17.49 dB | EdgeGrad: 2.08
+   Patched Weights  -> PSNR: 14.82 dB | EdgeGrad: 2.2
+EDGE-CASE SUITE B (Black-Background Sprite / Crisp Line-Art):
+   Original Weights -> PSNR: 17.77 dB | EdgeGrad: 6.75 | Pure-Black Floor Lift: +8.4 RGB
+   Patched Weights  -> PSNR: 17.14 dB | EdgeGrad: 6.94 | Pure-Black Floor Lift: +3.29 RGB
+========================================================================

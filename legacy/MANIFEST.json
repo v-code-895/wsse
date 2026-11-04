@@ -1,0 +1,50 @@
+[
+ {
+  "project": "Anime-DCGAN",
+  "file": "generator50000.h5",
+  "bytes": 1037216,
+  "sha256": "d341b2b5681319194fcc39d1d5814134525ef6a8d422ae847c5ac749f4904d5b"
+ },
+ {
+  "project": "Cat-GAN",
+  "file": "generator580.h5",
+  "bytes": 2374792,
+  "sha256": "b9b2759d3adcd4d84c6a81a8aacfccea91cfdc3a4c9a87e170a974d5a6043cad"
+ },
+ {
+  "project": "Deep-Color",
+  "file": "generator2800.h5",
+  "bytes": 637824,
+  "sha256": "02642acd599ea79b0dd21a493ca994bbdda3cb5216bfdc3ea735842120a1b1c5"
+ },
+ {
+  "project": "Recycle-Bot",
+  "file": "trash_hinge_new.h5",
+  "bytes": 8970144,
+  "sha256": "aca77324e2928fd526d7ac7fe9493d7dc4854d5506bc1fb99ebbd4147ed58082"
+ },
+ {
+  "project": "TinySR-18",
+  "file": "generator.h5",
+  "bytes": 1292368,
+  "sha256": "d9e65acbcff37a0799b6e600b2dca1b36f250daa9db255975eba29a5630fa255"
+ },
+ {
+  "project": "TinySR-18",
+  "file": "model.json",
+  "bytes": 6297,
+  "sha256": "949b6492a3dadec5d06d6afb5f3a5ad9dcacb38bb9b59b4d531adcced4c13e08"
+ },
+ {
+  "project": "TinySR-18",
+  "file": "group1-shard1of1.bin",
+  "bytes": 2389516,
+  "sha256": "4ecf45a4b2fc6b315b1dc3727dbef5cb411813a14b2250dfc609e56bde251759"
+ },
+ {
+  "project": "PCA-GAN",
+  "file": "model.h5",
+  "bytes": 2374792,
+  "sha256": "5d10c8ca3fb48a9eb7ff1414a97bafd749b931259f1ea819d761f4e76fa176ce"
+ }
+]

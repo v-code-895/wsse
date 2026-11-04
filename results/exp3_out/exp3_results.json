@@ -1,0 +1,398 @@
+{
+ "base": "145ec232ed8a91e5",
+ "attributes": [
+  "hair_warmth",
+  "hair_lightness",
+  "background",
+  "face_lightness",
+  "eye_teal",
+  "saturation"
+ ],
+ "sd": [
+  0.16176721453666687,
+  0.1441769003868103,
+  0.14145733416080475,
+  0.06568702310323715,
+  0.037876006215810776,
+  0.04427839070558548
+ ],
+ "r2_heldout": {
+  "hair_warmth": 0.8931,
+  "hair_lightness": 0.8948,
+  "background": 0.8509,
+  "face_lightness": 0.6594,
+  "eye_teal": 0.8081,
+  "saturation": 0.0884
+ },
+ "r2_heldout_orth": {
+  "hair_warmth": 0.6738,
+  "hair_lightness": 0.1598,
+  "background": 0.3322,
+  "face_lightness": 0.4974,
+  "eye_teal": 0.6925,
+  "saturation": 0.0233
+ },
+ "direction_cosine": [
+  [
+   1.0,
+   0.24,
+   0.17,
+   0.206,
+   -0.248,
+   -0.156
+  ],
+  [
+   0.24,
+   1.0,
+   0.788,
+   0.245,
+   0.161,
+   0.328
+  ],
+  [
+   0.17,
+   0.788,
+   1.0,
+   0.366,
+   0.033,
+   -0.024
+  ],
+  [
+   0.206,
+   0.245,
+   0.366,
+   1.0,
+   0.002,
+   -0.311
+  ],
+  [
+   -0.248,
+   0.161,
+   0.033,
+   0.002,
+   1.0,
+   0.129
+  ],
+  [
+   -0.156,
+   0.328,
+   -0.024,
+   -0.311,
+   0.129,
+   1.0
+  ]
+ ],
+ "changed_params": {
+  "shift_hair_warmth": 1024,
+  "shift_hair_warmth_orth": 1024,
+  "shift_hair_lightness": 1024,
+  "shift_hair_lightness_orth": 1024,
+  "shift_background": 1024,
+  "shift_background_orth": 1024,
+  "shift_face_lightness": 1024,
+  "shift_face_lightness_orth": 1024,
+  "shift_eye_teal": 1024,
+  "shift_eye_teal_orth": 1024,
+  "shift_saturation": 1024,
+  "shift_saturation_orth": 1024
+ },
+ "entanglement_shift": [
+  [
+   1.498,
+   0.317,
+   0.229,
+   0.181,
+   -0.324,
+   1.242
+  ],
+  [
+   0.411,
+   1.495,
+   1.205,
+   0.392,
+   0.355,
+   -0.195
+  ],
+  [
+   0.313,
+   1.276,
+   1.463,
+   0.603,
+   0.109,
+   -0.351
+  ],
+  [
+   0.391,
+   0.467,
+   0.674,
+   1.369,
+   0.027,
+   -0.296
+  ],
+  [
+   -0.475,
+   0.298,
+   0.086,
+   0.093,
+   1.577,
+   0.339
+  ],
+  [
+   -0.337,
+   0.595,
+   0.172,
+   -0.441,
+   0.288,
+   0.683
+  ]
+ ],
+ "entanglement_shift_orth": [
+  [
+   1.425,
+   -0.023,
+   -0.023,
+   -0.07,
+   0.135,
+   1.108
+  ],
+  [
+   0.042,
+   0.904,
+   0.101,
+   0.049,
+   -0.037,
+   -0.119
+  ],
+  [
+   -0.038,
+   0.013,
+   0.865,
+   0.022,
+   -0.032,
+   -0.054
+  ],
+  [
+   -0.008,
+   0.031,
+   0.04,
+   1.152,
+   -0.017,
+   -0.095
+  ],
+  [
+   0.032,
+   0.034,
+   0.033,
+   0.124,
+   1.442,
+   0.019
+  ],
+  [
+   -0.029,
+   0.062,
+   0.091,
+   0.005,
+   0.012,
+   0.424
+  ]
+ ],
+ "clamp": {
+  "hair_warmth": {
+   "shift_sd": 1.637,
+   "var_ratio": 0.055,
+   "changed_params": 66560
+  },
+  "hair_lightness": {
+   "shift_sd": 1.647,
+   "var_ratio": 0.067,
+   "changed_params": 66560
+  },
+  "background": {
+   "shift_sd": 1.641,
+   "var_ratio": 0.063,
+   "changed_params": 66560
+  },
+  "face_lightness": {
+   "shift_sd": 1.512,
+   "var_ratio": 0.235,
+   "changed_params": 66560
+  },
+  "eye_teal": {
+   "shift_sd": 1.584,
+   "var_ratio": 0.259,
+   "changed_params": 66560
+  },
+  "saturation": {
+   "shift_sd": 0.694,
+   "var_ratio": 1.531,
+   "changed_params": 66557
+  }
+ },
+ "shift_merge": {
+  "pair": [
+   "hair_warmth",
+   "background"
+  ],
+  "merged_delta_sd": [
+   1.4160000085830688,
+   1.2690000534057617,
+   1.4179999828338623,
+   0.6800000071525574,
+   -0.02800000086426735,
+   0.9419999718666077
+  ],
+  "sum_of_individual_sd": [
+   1.811,
+   1.593,
+   1.692,
+   0.784,
+   -0.214,
+   0.891
+  ],
+  "additivity_error_sd": 0.395
+ },
+ "clamp_order": [
+  {
+   "pair": [
+    "hair_warmth",
+    "hair_lightness"
+   ],
+   "cos": 0.24,
+   "weight_maxabs": 0.16660679876804352,
+   "output_mae": 0.03313383832573891
+  },
+  {
+   "pair": [
+    "hair_warmth",
+    "background"
+   ],
+   "cos": 0.17,
+   "weight_maxabs": 0.11317884176969528,
+   "output_mae": 0.02525527961552143
+  },
+  {
+   "pair": [
+    "hair_warmth",
+    "face_lightness"
+   ],
+   "cos": 0.206,
+   "weight_maxabs": 0.10136989504098892,
+   "output_mae": 0.02772420458495617
+  },
+  {
+   "pair": [
+    "hair_warmth",
+    "eye_teal"
+   ],
+   "cos": -0.248,
+   "weight_maxabs": 0.1830337643623352,
+   "output_mae": 0.03472566977143288
+  },
+  {
+   "pair": [
+    "hair_warmth",
+    "saturation"
+   ],
+   "cos": -0.156,
+   "weight_maxabs": 0.1507895290851593,
+   "output_mae": 0.023603620007634163
+  },
+  {
+   "pair": [
+    "hair_lightness",
+    "background"
+   ],
+   "cos": 0.788,
+   "weight_maxabs": 0.34746789932250977,
+   "output_mae": 0.04836954176425934
+  },
+  {
+   "pair": [
+    "hair_lightness",
+    "face_lightness"
+   ],
+   "cos": 0.245,
+   "weight_maxabs": 0.17011670768260956,
+   "output_mae": 0.02988441288471222
+  },
+  {
+   "pair": [
+    "hair_lightness",
+    "eye_teal"
+   ],
+   "cos": 0.161,
+   "weight_maxabs": 0.08473670482635498,
+   "output_mae": 0.021441524848341942
+  },
+  {
+   "pair": [
+    "hair_lightness",
+    "saturation"
+   ],
+   "cos": 0.328,
+   "weight_maxabs": 0.17345450818538666,
+   "output_mae": 0.039491698145866394
+  },
+  {
+   "pair": [
+    "background",
+    "face_lightness"
+   ],
+   "cos": 0.366,
+   "weight_maxabs": 0.1520223617553711,
+   "output_mae": 0.03752947598695755
+  },
+  {
+   "pair": [
+    "background",
+    "eye_teal"
+   ],
+   "cos": 0.033,
+   "weight_maxabs": 0.019969820976257324,
+   "output_mae": 0.005114566069096327
+  },
+  {
+   "pair": [
+    "background",
+    "saturation"
+   ],
+   "cos": -0.024,
+   "weight_maxabs": 0.017175374552607536,
+   "output_mae": 0.0037089248653501272
+  },
+  {
+   "pair": [
+    "face_lightness",
+    "eye_teal"
+   ],
+   "cos": 0.002,
+   "weight_maxabs": 0.001454681158065796,
+   "output_mae": 0.0003817586984951049
+  },
+  {
+   "pair": [
+    "face_lightness",
+    "saturation"
+   ],
+   "cos": -0.311,
+   "weight_maxabs": 0.3006424605846405,
+   "output_mae": 0.04980072006583214
+  },
+  {
+   "pair": [
+    "eye_teal",
+    "saturation"
+   ],
+   "cos": 0.129,
+   "weight_maxabs": 0.05947607755661011,
+   "output_mae": 0.015021692030131817
+  }
+ ],
+ "checks": {
+  "shift_fold_vs_latent_maxabs": 3.337860107421875e-06,
+  "clamp_fold_vs_latent_maxabs": 2.562999725341797e-06,
+  "shift_merge_order_maxabs_weights": 5.960464477539063e-08,
+  "clamp_order_conflict_vs_abs_cos_corr": 0.8321082127828103,
+  "json_roundtrip_identical": true
+ }
+}

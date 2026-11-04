@@ -1,0 +1,11 @@
+{
+ "mirror_exact_maxabs": 1.2814998626708984e-06,
+ "rotate90_exact_maxabs": 1.5497207641601562e-06,
+ "sketch_vs_two_step_maxabs_interior": 2.6226043701171875e-06,
+ "sketch_vs_two_step_maxabs_border": 0.6317998170852661,
+ "params_changed": {
+  "mirror": "all conv kernels + dense (a permutation, no values change)",
+  "sketch": "last conv 3x3x64x3 -> 7x7x64x3 (architecture: kernel size)",
+  "colour folds": "last conv kernel + bias (579 numbers)"
+ }
+}

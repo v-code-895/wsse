@@ -1,0 +1,40 @@
+{
+ "format": "weightpatch/v0",
+ "id": "color_fold",
+ "base": "3c0f6f6dc471e183",
+ "description": "affine color/black-level correction folded into the final linear conv",
+ "ops": [
+  {
+   "type": "fold_output_affine",
+   "layer": "conv2d_9",
+   "M": [
+    [
+     0.94752,
+     0.156287,
+     0.12619
+    ],
+    [
+     0.006422,
+     1.323137,
+     -0.123343
+    ],
+    [
+     -0.084347,
+     0.094171,
+     1.057721
+    ]
+   ],
+   "t": [
+    0.002442,
+    0.004714,
+    0.054364
+   ]
+  }
+ ],
+ "fit": {
+  "split": "natural_calib+sprite_calib",
+  "pixels": 180000,
+  "method": "ridge least squares toward identity"
+ },
+ "changed_params": 4803
+}

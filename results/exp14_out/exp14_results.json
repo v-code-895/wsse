@@ -1,0 +1,36 @@
+{
+ "base": "8cb6601c1b449ffc",
+ "delta_cos": 0.08843015879392624,
+ "delta_rel_norm": {
+  "bicubic": 0.16346557438373566,
+  "noisy": 0.16669128835201263
+ },
+ "merge_order_maxabs": 1.4901161193847656e-08,
+ "tests": {
+  "base": {
+   "bicubic LR": 32.527622933726605,
+   "noisy bicubic LR": 26.891242471414134,
+   "nearest LR": 31.121491915275854
+  },
+  "branch: bicubic": {
+   "bicubic LR": 32.76084621457063,
+   "noisy bicubic LR": 26.422332242113868,
+   "nearest LR": 26.237583481778902
+  },
+  "branch: noisy": {
+   "bicubic LR": 32.32387986981126,
+   "noisy bicubic LR": 30.152596620517098,
+   "nearest LR": 30.11033149265487
+  },
+  "merge: base + d_bicubic + d_noisy": {
+   "bicubic LR": 32.49344068179851,
+   "noisy bicubic LR": 29.451571771137868,
+   "nearest LR": 27.06045415445544
+  },
+  "merge: base + (d_bicubic + d_noisy) / 2": {
+   "bicubic LR": 32.637521176066684,
+   "noisy bicubic LR": 28.779321815491585,
+   "nearest LR": 28.07518453136764
+  }
+ }
+}

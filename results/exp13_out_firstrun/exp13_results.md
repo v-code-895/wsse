@@ -1,0 +1,100 @@
+# Experiment 13: 2018 weight-space tools on CatGAN-26
+
+Base `be2b16ff52fc4021`. Latent fits n=1200, held-out n=400; shifts α=2, clamps to 2. Effects in held-out SD.
+
+## Latent directions
+
+| attribute | held-out R² (raw) | (orthogonalised) | clamp: shift (SD) | clamp: variance ratio |
+|---|---|---|---|---|
+| fur_warmth | 0.315 | 0.001 | +1.93 | 1.99 |
+| fur_lightness | 0.438 | 0.312 | +0.87 | 0.83 |
+| background | 0.661 | 0.588 | +1.39 | 0.41 |
+| eye_green | 0.510 | 0.386 | +1.20 | 0.49 |
+| saturation | 0.462 | 0.076 | +2.35 | 2.11 |
+
+Shift patch (row) -> measured change (column), raw directions:
+
+| patch \ measured | fur_warmth | fur_lightness | background | eye_green | saturation |
+|---|---|---|---|---|---|
+| fur_warmth | **+1.80** | -0.11 | -0.30 | -0.50 | +2.08 |
+| fur_lightness | +0.85 | **+0.77** | -0.36 | -0.49 | +1.13 |
+| background | -0.09 | -0.37 | **+1.23** | -0.52 | -0.16 |
+| eye_green | -0.28 | -0.14 | -0.47 | **+1.11** | -0.27 |
+| saturation | +1.78 | -0.02 | -0.34 | -0.43 | **+2.16** |
+
+Shift patch (row) -> measured change (column), orthogonalised directions:
+
+| patch \ measured | fur_warmth | fur_lightness | background | eye_green | saturation |
+|---|---|---|---|---|---|
+| fur_warmth | **-0.01** | -0.07 | -0.03 | -0.22 | -0.08 |
+| fur_lightness | -0.06 | **+0.97** | -0.06 | -0.18 | +0.13 |
+| background | -0.05 | -0.14 | **+1.16** | -0.07 | -0.07 |
+| eye_green | -0.09 | +0.11 | -0.08 | **+1.04** | +0.02 |
+| saturation | +0.07 | +0.13 | -0.07 | +0.06 | **+0.45** |
+
+Mean off-target effect per patch: raw 2.14 SD, orthogonalised 0.36 SD; on-target: raw 1.41, orthogonalised 0.72.
+
+Clamp merge order (A∘B vs B∘A):
+
+| pair | cos | max weight diff | output MAE |
+|---|---|---|---|
+| fur_warmth / fur_lightness | +0.451 | 4.37e-01 | 0.0693 |
+| fur_warmth / background | -0.052 | 8.63e-02 | 0.0206 |
+| fur_warmth / eye_green | -0.238 | 4.50e-01 | 0.0714 |
+| fur_warmth / saturation | +0.951 | 2.59e-01 | 0.0480 |
+| fur_lightness / background | -0.154 | 3.12e-01 | 0.0482 |
+| fur_lightness / eye_green | -0.188 | 3.48e-01 | 0.0503 |
+| fur_lightness / saturation | +0.452 | 4.59e-01 | 0.0660 |
+| background / eye_green | -0.296 | 5.05e-01 | 0.0817 |
+| background / saturation | -0.062 | 1.04e-01 | 0.0258 |
+| eye_green / saturation | -0.234 | 4.27e-01 | 0.0680 |
+
+## Blue eyes (iris pixels from the base image; 'rest' = pixels more than 3 px from any iris pixel)
+
+Iris detected in 95% of held-out cats.
+
+| edit | params changed | eye hue | dist. to target | rest MAE | rest p99 px change |
+|---|---|---|---|---|---|
+| base | 0 | 43° | 0.248 | 0.0000 | 0.000 |
+| latent towards blue, shift 2 | 0 (input edit) | 41° | 0.236 | 0.0727 | 0.516 |
+| latent towards blue, shift 4 | 0 (input edit) | 40° | 0.221 | 0.1273 | 0.647 |
+| ungated 1x1 colour fold | 99 | 223° | 0.023 | 0.1364 | 0.432 |
+| prune2 | 1445 | 37° | 0.244 | 0.0045 | 0.030 |
+| prune2 + eye gate | 1445 | 59° | 0.167 | 0.0056 | 0.063 |
+
+Gate threshold sweep (held-out):
+
+| quantile | eye hue | dist. to target | rest MAE | rest p99 px change |
+|---|---|---|---|---|
+| 0.95 | 224° | 0.122 | 0.0078 | 0.116 |
+| 0.9839 | 59° | 0.167 | 0.0056 | 0.063 |
+| 0.999 | 37° | 0.225 | 0.0046 | 0.032 |
+
+## MobileNetV2 oracle (share of 64 samples whose top-1 ImageNet class is a domestic cat)
+
+| generator | cat rate |
+|---|---|
+| base | 95% |
+| mirror (exact) | 98% |
+| truncation 0.7 (exact) | 95% |
+| shift fur_warmth (orth) | 95% |
+| shift fur_lightness (orth) | 89% |
+| shift background (orth) | 95% |
+| shift eye_green (orth) | 98% |
+| shift saturation (orth) | 95% |
+| clamp fur_lightness | 91% |
+| clamp background | 95% |
+| ungated 1x1 colour fold | 95% |
+| prune2 + eye gate | 95% |
+
+## Checks
+
+- shift_fold_vs_latent_edit_maxabs: 8.07642936706543e-06
+- pruned_slots: [21, 11]
+- gate_layers: ['b5c2', 'out']
+- colour_vector: [-1.1166, -0.2815, 1.6911]
+- theta_quantile: 0.9839354640259572
+- mean_iris_pixels: 259.04
+- eye_patches_json_roundtrip_maxabs: 9.313225746154785e-10
+- mirror_vs_flipped_maxabs: 6.258487701416016e-06
+- truncation_fold_vs_scaled_z_maxabs: 6.22868537902832e-06

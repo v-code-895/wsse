@@ -1,0 +1,22 @@
+# datasets (see DATA.md), caches and logs
+data/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+logs/
+*.npy
+
+
+# large or regenerable weights (CatGAN-26 and its training checkpoint are release assets, see MODELS.md)
+*.pt
+results/exp11_out/catgan26.npz
+results/**/catgan26_with_ops.npz
+results/exp17_out/catgan26_s*.npz
+results/exp2_out/generator_patched.h5
+results/exp2b_out/generator_*.npz
+results/exp2b_selftest/generator_*.npz
+
+# weight repositories are nested git repos: they are shipped as git bundles (weightrepo.bundle)
+results/**/weightrepo/
+build/
+

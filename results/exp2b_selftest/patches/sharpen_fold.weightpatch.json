@@ -1,0 +1,79 @@
+{
+ "format": "weightpatch/v0",
+ "id": "sharpen_fold",
+ "base": "c3003fa086c3bf20",
+ "description": "unsharp (lambda=2.0) folded into final conv, 5x5 projection",
+ "ops": [
+  {
+   "type": "fold_output_spatial",
+   "layer": "conv2d_9",
+   "S": [
+    [
+     -0.125,
+     -0.25,
+     -0.125
+    ],
+    [
+     -0.25,
+     2.5,
+     -0.25
+    ],
+    [
+     -0.125,
+     -0.25,
+     -0.125
+    ]
+   ]
+  }
+ ],
+ "fit": {
+  "split": "calib",
+  "sweep": [
+   {
+    "lambda": -0.6,
+    "calib_psnr": 22.16
+   },
+   {
+    "lambda": -0.3,
+    "calib_psnr": 22.281
+   },
+   {
+    "lambda": -0.15,
+    "calib_psnr": 22.338
+   },
+   {
+    "lambda": 0.0,
+    "calib_psnr": 22.393
+   },
+   {
+    "lambda": 0.15,
+    "calib_psnr": 22.446
+   },
+   {
+    "lambda": 0.3,
+    "calib_psnr": 22.496
+   },
+   {
+    "lambda": 0.5,
+    "calib_psnr": 22.56
+   },
+   {
+    "lambda": 0.75,
+    "calib_psnr": 22.632
+   },
+   {
+    "lambda": 1.0,
+    "calib_psnr": 22.697
+   },
+   {
+    "lambda": 1.5,
+    "calib_psnr": 22.8
+   },
+   {
+    "lambda": 2.0,
+    "calib_psnr": 22.867
+   }
+  ]
+ },
+ "changed_params": 63
+}

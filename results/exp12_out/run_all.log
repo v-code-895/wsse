@@ -1,0 +1,298 @@
+{
+ "tinysr18_gpu_vs_numpy_maxabs": 1.8477439880371094e-06,
+ "exp2b natural_test 2x, LR bicubic": {
+  "bicubic": [
+   29.720992643893982,
+   0.8915630728006363
+  ],
+  "TinySR-18": [
+   22.304206258930723,
+   0.6967242956161499
+  ],
+  "TinySR-26": [
+   29.354636566914063,
+   0.8787005394697189
+  ]
+ },
+ "exp2b sprite_test 2x, LR bicubic": {
+  "bicubic": [
+   25.579884513660563,
+   0.9396585921446482
+  ],
+  "TinySR-18": [
+   19.038874345875698,
+   0.6716141303380331
+  ],
+  "TinySR-26": [
+   25.93861772053029,
+   0.9416165848573049
+  ]
+ },
+ "exp2b legacy 2x, LR bicubic": {
+  "bicubic": [
+   30.86553835900025,
+   0.9576094746589661
+  ],
+  "TinySR-18": [
+   19.171094846037064,
+   0.8027806878089905
+  ],
+  "TinySR-26": [
+   32.37022678338625,
+   0.9657567143440247
+  ]
+ },
+ "exp2b natural_test 2x, LR nearest": {
+  "bicubic": [
+   26.770502914130333,
+   0.8376253694295883
+  ],
+  "TinySR-18": [
+   22.752418907571318,
+   0.7362097948789597
+  ],
+  "TinySR-26": [
+   29.891534192276424,
+   0.8943699598312378
+  ]
+ },
+ "exp2b sprite_test 2x, LR nearest": {
+  "bicubic": [
+   22.92866036418684,
+   0.9234414498011271
+  ],
+  "TinySR-18": [
+   19.445828805152967,
+   0.6787721415360769
+  ],
+  "TinySR-26": [
+   25.480000416267576,
+   0.9369557499885559
+  ]
+ },
+ "exp2b legacy 2x, LR nearest": {
+  "bicubic": [
+   30.86553835900025,
+   0.9576094746589661
+  ],
+  "TinySR-18": [
+   19.171094846037064,
+   0.8027806878089905
+  ],
+  "TinySR-26": [
+   32.37022678338625,
+   0.9657567143440247
+  ]
+ },
+ "colour-fold headroom, TinySR-18": {
+  "M": [
+   [
+    0.963,
+    0.151,
+    0.137
+   ],
+   [
+    -0.015,
+    1.398,
+    -0.151
+   ],
+   [
+    -0.077,
+    0.066,
+    1.143
+   ]
+  ],
+  "t_rgb": [
+   -2.07,
+   -0.39,
+   6.79
+  ],
+  "heldout_gain_db": 2.2550010968849357
+ },
+ "colour-fold headroom, TinySR-26": {
+  "M": [
+   [
+    0.998,
+    -0.0,
+    0.002
+   ],
+   [
+    0.0,
+    0.996,
+    0.005
+   ],
+   [
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "t_rgb": [
+   -0.04,
+   0.03,
+   0.05
+  ],
+  "heldout_gain_db": 0.0007381839508751042
+ },
+ "AFHQ val 2x (128->256), LR bicubic": {
+  "bicubic": [
+   32.01799492982623,
+   0.9097292472918829
+  ],
+  "TinySR-18": [
+   20.486942476640692,
+   0.7578326557079951
+  ],
+  "TinySR-26": [
+   32.43244014291055,
+   0.9210228065649668
+  ]
+ },
+ "AFHQ val 4x (128->512), LR bicubic": {
+  "bicubic": [
+   29.20530762873412,
+   0.7939521053433418
+  ],
+  "TinySR-18 twice": [
+   15.37580022806011,
+   0.5599905165533224
+  ],
+  "TinySR-26": [
+   30.166933662234467,
+   0.8271797421574593
+  ]
+ },
+ "AFHQ val 2x (128->256), LR nearest": {
+  "bicubic": [
+   28.776278971888434,
+   0.8640870606899261
+  ],
+  "TinySR-18": [
+   20.68468094859151,
+   0.793117398818334
+  ],
+  "TinySR-26": [
+   31.823708638275008,
+   0.9095462048053742
+  ]
+ },
+ "AFHQ val 4x (128->512), LR nearest": {
+  "bicubic": [
+   27.4589536401327,
+   0.7740619747340679
+  ],
+  "TinySR-18 twice": [
+   15.346530395107736,
+   0.5745204339921475
+  ],
+  "TinySR-26": [
+   28.694087990417422,
+   0.7969078589479128
+  ]
+ }
+}
+AFHQ val cats (real) {'domestic_cat_rate': 0.968, 'seconds': 89.23514413833618}
+AFHQ train cats (real, 500) {'domestic_cat_rate': 0.962, 'seconds': 88.93609619140625}
+CatGAN-26, psi 1.0 {'domestic_cat_rate': 0.96, 'seconds': 89.1748514175415}
+CatGAN-26, psi 0.7 (truncation) {'domestic_cat_rate': 0.97, 'seconds': 88.82939338684082}
+# Experiment 12: 2026 models vs 2018 models
+
+## A. Super-sampling (PSNR dB / SSIM, means)
+
+GPU port of TinySR-18 vs the exp2b NumPy engine: max difference 1.8e-06.
+
+**exp2b natural_test 2x, LR bicubic**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 29.72 | 0.8916 |
+| TinySR-18 | 22.30 | 0.6967 |
+| TinySR-26 | 29.35 | 0.8787 |
+
+**exp2b sprite_test 2x, LR bicubic**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 25.58 | 0.9397 |
+| TinySR-18 | 19.04 | 0.6716 |
+| TinySR-26 | 25.94 | 0.9416 |
+
+**exp2b legacy 2x, LR bicubic**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 30.87 | 0.9576 |
+| TinySR-18 | 19.17 | 0.8028 |
+| TinySR-26 | 32.37 | 0.9658 |
+
+**exp2b natural_test 2x, LR nearest**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 26.77 | 0.8376 |
+| TinySR-18 | 22.75 | 0.7362 |
+| TinySR-26 | 29.89 | 0.8944 |
+
+**exp2b sprite_test 2x, LR nearest**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 22.93 | 0.9234 |
+| TinySR-18 | 19.45 | 0.6788 |
+| TinySR-26 | 25.48 | 0.9370 |
+
+**exp2b legacy 2x, LR nearest**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 30.87 | 0.9576 |
+| TinySR-18 | 19.17 | 0.8028 |
+| TinySR-26 | 32.37 | 0.9658 |
+
+**AFHQ val 2x (128->256), LR bicubic**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 32.02 | 0.9097 |
+| TinySR-18 | 20.49 | 0.7578 |
+| TinySR-26 | 32.43 | 0.9210 |
+
+**AFHQ val 4x (128->512), LR bicubic**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 29.21 | 0.7940 |
+| TinySR-18 twice | 15.38 | 0.5600 |
+| TinySR-26 | 30.17 | 0.8272 |
+
+**AFHQ val 2x (128->256), LR nearest**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 28.78 | 0.8641 |
+| TinySR-18 | 20.68 | 0.7931 |
+| TinySR-26 | 31.82 | 0.9095 |
+
+**AFHQ val 4x (128->512), LR nearest**
+
+| model | PSNR | SSIM |
+|---|---|---|
+| bicubic | 27.46 | 0.7741 |
+| TinySR-18 twice | 15.35 | 0.5745 |
+| TinySR-26 | 28.69 | 0.7969 |
+
+**Colour-fold headroom** (best affine colour correction fit on exp2b's calibration split, gain on its held-out natural images)
+
+| model | M | t (RGB) | held-out gain |
+|---|---|---|---|
+| TinySR-18 | [[0.963, 0.151, 0.137], [-0.015, 1.398, -0.151], [-0.077, 0.066, 1.143]] | [-2.07, -0.39, 6.79] | +2.26 dB |
+| TinySR-26 | [[0.998, -0.0, 0.002], [0.0, 0.996, 0.005], [0.0, 0.0, 1.0]] | [-0.04, 0.03, 0.05] | +0.00 dB |
+
+## B. CatGAN-26 judged by MobileNetV2 (ImageNet)
+
+| images (500 each) | called a domestic cat | Fréchet distance to val cats (MobileNetV2 features) | nearest-train thumbnail corr. (median / p95 / share > 0.95) |
+|---|---|---|---|
+| AFHQ val cats (real) | 97% | — | 0.70 / 0.89 / 2% |
+| AFHQ train cats (real, 500) | 96% | 47.1 | — |
+| CatGAN-26, psi 1.0 | 96% | 60.6 | 0.70 / 0.84 / 0% |
+| CatGAN-26, psi 0.7 (truncation) | 97% | 68.2 | 0.72 / 0.83 / 0% |

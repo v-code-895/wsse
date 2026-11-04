@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the paper below."
+title: "Weight-Space Software Engineering (WSSE): wpgit and .weightpatch"
+abstract: >-
+  Version control and unit-tested patches for neural network weights.
+  Weight edits are hash-pinned, self-testing text patches (.weightpatch.json) that wpgit builds,
+  tests in context and merge-checks under git; demonstrated on 2017-2020 Keras checkpoints and on
+  two models trained in 2026 (TinySR-26, CatGAN-26).
+type: software
+version: "1.0.0"
+date-released: "2026-11-04"
+license: MIT
+authors:
+  - given-names: Voravee
+    family-names: Upatising
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO: add if available
+  - name: "Claude (Anthropic; model Claude Opus 5.5)"
+keywords:
+  - weight editing
+  - model patching
+  - version control
+  - software engineering for machine learning
+  - GAN
+  - super-resolution
+repository-code: "https://github.com/v-code-895/wsse"
+preferred-citation:
+  type: report
+  title: "Weight-Space Software Engineering: Version Control and Unit-Tested Patches for Neural Network Weights"
+  authors:
+    - given-names: Voravee
+      family-names: Upatising
+    - name: "Claude (Anthropic; model Claude Opus 5.5)"
+  year: 2026
+  month: 11
+  notes: "Preprint. AI co-authorship is disclosed in the paper's contribution statement."

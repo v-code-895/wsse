@@ -1,0 +1,36 @@
+{
+ "base": "8cb6601c1b449ffc",
+ "delta_cos": 0.07984499633312225,
+ "delta_rel_norm": {
+  "cats": 0.05247650668025017,
+  "noisy": 0.16831010580062866
+ },
+ "merge_order_maxabs": 7.450580596923828e-09,
+ "tests": {
+  "base": {
+   "cats, clean": 30.994526149151376,
+   "all, noisy LR": 26.446704776019175,
+   "dogs + wildlife, clean": 30.702468497464633
+  },
+  "branch: cats": {
+   "cats, clean": 31.075305507061213,
+   "all, noisy LR": 26.32889328316529,
+   "dogs + wildlife, clean": 30.846621564643883
+  },
+  "branch: noisy": {
+   "cats, clean": 31.87867220560606,
+   "all, noisy LR": 29.754601559808673,
+   "dogs + wildlife, clean": 31.795131916182715
+  },
+  "merge: base + d_cats + d_noisy": {
+   "cats, clean": 31.881295958874126,
+   "all, noisy LR": 29.7603706965322,
+   "dogs + wildlife, clean": 31.785341699997446
+  },
+  "merge: base + (d_cats + d_noisy) / 2": {
+   "cats, clean": 32.012382514740004,
+   "all, noisy LR": 27.905207357198215,
+   "dogs + wildlife, clean": 31.92899610664352
+  }
+ }
+}

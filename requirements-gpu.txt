@@ -1,0 +1,5 @@
+# Part II (training and evaluating TinySR-26 / CatGAN-26). Tested on an RTX 3050 8 GB, CUDA 12.6.
+#   pip install -r requirements.txt
+#   pip install -r requirements-gpu.txt --index-url https://download.pytorch.org/whl/cu126
+torch==2.8.0
+torchvision==0.23.0

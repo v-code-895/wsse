@@ -1,0 +1,461 @@
+{
+ "base": "8cb6601c1b449ffc",
+ "tol_db": 0.1,
+ "fit_images": 120,
+ "test_images": 180,
+ "fit_base": {
+  "bicubic LR": 33.546249187461406,
+  "noisy bicubic LR": 27.55317149775987,
+  "nearest LR": 32.220529415926045
+ },
+ "grid": [
+  {
+   "a": 0.0,
+   "b": 0.0,
+   "fit_delta": {
+    "bicubic LR": 0.0,
+    "noisy bicubic LR": 0.0,
+    "nearest LR": 0.0
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.0,
+   "b": 0.25,
+   "fit_delta": {
+    "bicubic LR": -0.10916905066858362,
+    "noisy bicubic LR": 0.757786936602816,
+    "nearest LR": -1.8686477288738281
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.0,
+   "b": 0.5,
+   "fit_delta": {
+    "bicubic LR": -0.15102622080414818,
+    "noisy bicubic LR": 1.5204219712679539,
+    "nearest LR": -1.272047557093174
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.0,
+   "b": 0.75,
+   "fit_delta": {
+    "bicubic LR": -0.18890203018212048,
+    "noisy bicubic LR": 2.7798557734909473,
+    "nearest LR": -0.9527160777807495
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.0,
+   "b": 1.0,
+   "fit_delta": {
+    "bicubic LR": -0.201291837525865,
+    "noisy bicubic LR": 3.4098725595044073,
+    "nearest LR": -1.0875479256234044
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.25,
+   "b": 0.0,
+   "fit_delta": {
+    "bicubic LR": 0.11011331599578256,
+    "noisy bicubic LR": -0.20835030864863313,
+    "nearest LR": -2.0674153122765837
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.25,
+   "b": 0.25,
+   "fit_delta": {
+    "bicubic LR": 0.08369312342085777,
+    "noisy bicubic LR": 0.8951953248762479,
+    "nearest LR": -2.4795100531697862
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.25,
+   "b": 0.5,
+   "fit_delta": {
+    "bicubic LR": 0.035785514644757654,
+    "noisy bicubic LR": 1.7481772562570583,
+    "nearest LR": -2.0487366843762587
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.25,
+   "b": 0.75,
+   "fit_delta": {
+    "bicubic LR": -0.012356856776150948,
+    "noisy bicubic LR": 2.8053771816011555,
+    "nearest LR": -1.797662262785309
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.25,
+   "b": 1.0,
+   "fit_delta": {
+    "bicubic LR": -0.059649658253704274,
+    "noisy bicubic LR": 3.355840370193448,
+    "nearest LR": -1.8988655834931158
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.5,
+   "b": 0.0,
+   "fit_delta": {
+    "bicubic LR": 0.17406123759752745,
+    "noisy bicubic LR": -0.42257110831882017,
+    "nearest LR": -3.3810458597468482
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.5,
+   "b": 0.25,
+   "fit_delta": {
+    "bicubic LR": 0.14707211961722777,
+    "noisy bicubic LR": 0.7070257535244018,
+    "nearest LR": -3.305165585263552
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.5,
+   "b": 0.5,
+   "fit_delta": {
+    "bicubic LR": 0.09225321322825408,
+    "noisy bicubic LR": 1.695434818446909,
+    "nearest LR": -3.0657213192745694
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.5,
+   "b": 0.75,
+   "fit_delta": {
+    "bicubic LR": 0.03324075897001677,
+    "noisy bicubic LR": 2.539041451250121,
+    "nearest LR": -2.788452983784694
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.5,
+   "b": 1.0,
+   "fit_delta": {
+    "bicubic LR": -0.03670103916574874,
+    "noisy bicubic LR": 3.104947998164455,
+    "nearest LR": -2.7313937219810462
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.75,
+   "b": 0.0,
+   "fit_delta": {
+    "bicubic LR": 0.21136495897909668,
+    "noisy bicubic LR": -0.6830691945270857,
+    "nearest LR": -4.225215354282501
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.75,
+   "b": 0.25,
+   "fit_delta": {
+    "bicubic LR": 0.1748933499555747,
+    "noisy bicubic LR": 0.5498766228525547,
+    "nearest LR": -4.10537400112813
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.75,
+   "b": 0.5,
+   "fit_delta": {
+    "bicubic LR": 0.11161457524953988,
+    "noisy bicubic LR": 1.5020094545494977,
+    "nearest LR": -3.8799459231040636
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.75,
+   "b": 0.75,
+   "fit_delta": {
+    "bicubic LR": 0.04171312675904204,
+    "noisy bicubic LR": 2.2326416823371638,
+    "nearest LR": -3.6060773043095153
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 0.75,
+   "b": 1.0,
+   "fit_delta": {
+    "bicubic LR": -0.047868662436314935,
+    "noisy bicubic LR": 2.793354867407782,
+    "nearest LR": -3.4459294687794326
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 1.0,
+   "b": 0.0,
+   "fit_delta": {
+    "bicubic LR": 0.2309598645455182,
+    "noisy bicubic LR": -0.8816617612886333,
+    "nearest LR": -4.77758378503076
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 1.0,
+   "b": 0.25,
+   "fit_delta": {
+    "bicubic LR": 0.19113046937127365,
+    "noisy bicubic LR": 0.3972319589200808,
+    "nearest LR": -4.614578156039077
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 1.0,
+   "b": 0.5,
+   "fit_delta": {
+    "bicubic LR": 0.12015651397194205,
+    "noisy bicubic LR": 1.2431589222401165,
+    "nearest LR": -4.411957181920794
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 1.0,
+   "b": 0.75,
+   "fit_delta": {
+    "bicubic LR": 0.03840180992791886,
+    "noisy bicubic LR": 1.9405759817246597,
+    "nearest LR": -4.186119835624364
+   },
+   "meets_spec": false
+  },
+  {
+   "a": 1.0,
+   "b": 1.0,
+   "fit_delta": {
+    "bicubic LR": -0.07074614136157464,
+    "noisy bicubic LR": 2.4766061255260894,
+    "nearest LR": -4.006440818047302
+   },
+   "meets_spec": false
+  }
+ ],
+ "grid_choice": null,
+ "blame": {
+  "bicubic": {
+   "head": -0.0897739485627369,
+   "body0": -1.2784916668223723,
+   "body1": -0.690391824865948,
+   "body2": -0.475626975190913,
+   "body3": -2.353802111714664,
+   "body4": -3.112371948132026,
+   "body5": -0.6465278016392872,
+   "tail": -0.14382224671961552,
+   "up": -0.5441071032966924
+  },
+  "noisy": {
+   "head": -0.4070760634109014,
+   "body0": -1.8718085364714412,
+   "body1": -2.0188069911439506,
+   "body2": -1.1237369370224428,
+   "body3": -0.14885394474354996,
+   "body4": 0.05504566201118166,
+   "body5": -0.03496958282612184,
+   "tail": -0.13508133053507976,
+   "up": -0.29827405161717735
+  }
+ },
+ "cherry_pick": {
+  "bicubic": {
+   "dropped": [
+    "body4",
+    "body3",
+    "body0",
+    "body1",
+    "body5",
+    "up",
+    "body2",
+    "tail"
+   ],
+   "fit_delta": {
+    "bicubic LR": 0.0007811492716172097,
+    "noisy bicubic LR": 0.009117353314195498,
+    "nearest LR": -0.0897739485627369
+   }
+  },
+  "noisy": {
+   "dropped": [
+    "body1",
+    "body0",
+    "body2",
+    "head",
+    "up",
+    "body3",
+    "tail"
+   ],
+   "fit_delta": {
+    "bicubic LR": -0.196744225143604,
+    "noisy bicubic LR": -4.5557166638198225,
+    "nearest LR": -0.03318837064347946
+   }
+  }
+ },
+ "resolution": {
+  "steps": 1000,
+  "rel_norm": 0.09679160267114639,
+  "joint_steps": 3000,
+  "seconds": 242.78473734855652
+ },
+ "test": {
+  "base": {
+   "psnr": {
+    "bicubic LR": 32.527622933726605,
+    "noisy bicubic LR": 26.891242471414134,
+    "nearest LR": 31.121491915275854
+   },
+   "delta": {
+    "bicubic LR": 0.0,
+    "noisy bicubic LR": 0.0,
+    "nearest LR": 0.0
+   },
+   "meets_spec": null
+  },
+  "branch: bicubic": {
+   "psnr": {
+    "bicubic LR": 32.760846231200006,
+    "noisy bicubic LR": 26.422332251734154,
+    "nearest LR": 26.23758346692883
+   },
+   "delta": {
+    "bicubic LR": 0.2332232974734012,
+    "noisy bicubic LR": -0.46891021967998014,
+    "nearest LR": -4.883908448347025
+   },
+   "meets_spec": false
+  },
+  "branch: noisy": {
+   "psnr": {
+    "bicubic LR": 32.32387989533587,
+    "noisy bicubic LR": 30.152596617815487,
+    "nearest LR": 30.110331489265324
+   },
+   "delta": {
+    "bicubic LR": -0.2037430383907335,
+    "noisy bicubic LR": 3.2613541464013522,
+    "nearest LR": -1.0111604260105302
+   },
+   "meets_spec": false
+  },
+  "merge: sum (exp14)": {
+   "psnr": {
+    "bicubic LR": 32.49344070303831,
+    "noisy bicubic LR": 29.45157177746794,
+    "nearest LR": 27.060454175410324
+   },
+   "delta": {
+    "bicubic LR": -0.034182230688294624,
+    "noisy bicubic LR": 2.5603293060538057,
+    "nearest LR": -4.0610377398655295
+   },
+   "meets_spec": false
+  },
+  "merge: average (exp14)": {
+   "psnr": {
+    "bicubic LR": 32.637521176066684,
+    "noisy bicubic LR": 28.779321815491585,
+    "nearest LR": 28.07518453136764
+   },
+   "delta": {
+    "bicubic LR": 0.10989824234007983,
+    "noisy bicubic LR": 1.8880793440774504,
+    "nearest LR": -3.046307383908214
+   },
+   "meets_spec": false
+  },
+  "(b) cherry-picked bicubic": {
+   "psnr": {
+    "bicubic LR": 32.529963523254516,
+    "noisy bicubic LR": 26.89674895720022,
+    "nearest LR": 31.020913327088607
+   },
+   "delta": {
+    "bicubic LR": 0.0023405895279111633,
+    "noisy bicubic LR": 0.005506485786085591,
+    "nearest LR": -0.10057858818724696
+   },
+   "meets_spec": false
+  },
+  "(b) cherry-picked noisy": {
+   "psnr": {
+    "bicubic LR": 32.33446791322627,
+    "noisy bicubic LR": 22.72781211208434,
+    "nearest LR": 31.082247360586422
+   },
+   "delta": {
+    "bicubic LR": -0.19315502050033473,
+    "noisy bicubic LR": -4.163430359329794,
+    "nearest LR": -0.03924455468943222
+   },
+   "meets_spec": false
+  },
+  "(b) merge of the two cherry-picks": {
+   "psnr": {
+    "bicubic LR": 32.34474407000465,
+    "noisy bicubic LR": 22.932205679398106,
+    "nearest LR": 31.0521079304309
+   },
+   "delta": {
+    "bicubic LR": -0.18287886372195317,
+    "noisy bicubic LR": -3.959036792016029,
+    "nearest LR": -0.06938398484495423
+   },
+   "meets_spec": false
+  },
+  "(c) sum merge + resolution commit (1k steps)": {
+   "psnr": {
+    "bicubic LR": 32.342441552215064,
+    "noisy bicubic LR": 30.185815011043715,
+    "nearest LR": 30.899767708458743
+   },
+   "delta": {
+    "bicubic LR": -0.18518138151154062,
+    "noisy bicubic LR": 3.2945725396295806,
+    "nearest LR": -0.22172420681711102
+   },
+   "meets_spec": false
+  },
+  "(c) joint fine-tune from base (3k steps, no branches)": {
+   "psnr": {
+    "bicubic LR": 32.55644022534281,
+    "noisy bicubic LR": 30.08205182060732,
+    "nearest LR": 31.196780044429275
+   },
+   "delta": {
+    "bicubic LR": 0.02881729161620683,
+    "noisy bicubic LR": 3.1908093491931844,
+    "nearest LR": 0.07528812915342087
+   },
+   "meets_spec": true
+  }
+ }
+}

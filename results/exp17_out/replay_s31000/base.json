@@ -1,0 +1,5 @@
+{
+ "weights": "../catgan26_s31000_with_ops.npz",
+ "hash": "ea796143128debd7",
+ "domain": "cat_domain"
+}

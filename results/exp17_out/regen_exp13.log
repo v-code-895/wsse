@@ -1,0 +1,118 @@
+[*] CatGAN-26 base bf629f2a3ba0b126: 1200+400 samples in 11.9s
+[1] latent patches done
+[2] eye circuit done
+[3] symmetry and truncation done
+[4] oracle: {"base": 0.96875, "mirror (exact)": 0.953125, "truncation 0.7 (exact)": 0.9375, "shift fur_warmth (orth, keep near-duplicates)": 0.984375, "shift fur_lightness (orth, keep near-duplicates)": 0.890625, "shift background (orth, keep near-duplicates)": 0.96875, "shift eye_green (orth, keep near-duplicates)": 1.0, "shift saturation (orth, keep near-duplicates)": 0.96875, "clamp fur_lightness": 0.9375, "clamp background": 0.96875, "ungated 1x1 colour fold": 0.96875, "prune2 + eye gate": 0.953125}
+# Experiment 13: 2018 weight-space tools on CatGAN-26
+
+Base `bf629f2a3ba0b126`. Latent fits n=1200, held-out n=400; shifts α=2, clamps to 2. Effects in held-out SD.
+
+## Latent directions
+
+| attribute | held-out R² (raw) | (orthogonalised) | (orth., keep near-duplicates) | clamp: shift (SD) | clamp: variance ratio |
+|---|---|---|---|---|---|
+| fur_warmth | 0.435 | 0.020 | 0.303 | +2.26 | 1.41 |
+| fur_lightness | 0.526 | 0.332 | 0.332 | +0.98 | 0.64 |
+| background | 0.658 | 0.549 | 0.549 | +1.42 | 0.46 |
+| eye_green | 0.463 | 0.317 | 0.317 | +1.06 | 0.47 |
+| saturation | 0.476 | 0.046 | 0.305 | +2.35 | 1.48 |
+
+Shift patch (row) -> measured change (column), raw directions:
+
+| patch \ measured | fur_warmth | fur_lightness | background | eye_green | saturation |
+|---|---|---|---|---|---|
+| fur_warmth | **+2.06** | +0.11 | -0.12 | -0.26 | +2.16 |
+| fur_lightness | +1.03 | **+0.81** | -0.15 | -0.37 | +1.13 |
+| background | +0.01 | -0.17 | **+1.25** | -0.51 | -0.00 |
+| eye_green | -0.39 | -0.36 | -0.48 | **+0.98** | -0.36 |
+| saturation | +1.95 | +0.10 | -0.12 | -0.25 | **+2.11** |
+
+Shift patch (row) -> measured change (column), orthogonalised against all others (exp3):
+
+| patch \ measured | fur_warmth | fur_lightness | background | eye_green | saturation |
+|---|---|---|---|---|---|
+| fur_warmth | **+0.23** | +0.02 | -0.03 | -0.02 | +0.07 |
+| fur_lightness | -0.06 | **+1.00** | -0.01 | -0.12 | +0.06 |
+| background | -0.07 | -0.12 | **+1.15** | -0.10 | -0.09 |
+| eye_green | -0.03 | +0.12 | -0.04 | **+0.95** | +0.02 |
+| saturation | +0.06 | +0.12 | +0.08 | +0.04 | **+0.45** |
+
+Shift patch (row) -> measured change (column), orthogonalised against all but near-duplicates (|cos| > 0.9):
+
+| patch \ measured | fur_warmth | fur_lightness | background | eye_green | saturation |
+|---|---|---|---|---|---|
+| fur_warmth | **+1.43** | -0.06 | -0.07 | -0.04 | +1.50 |
+| fur_lightness | -0.06 | **+1.00** | -0.01 | -0.12 | +0.06 |
+| background | -0.07 | -0.12 | **+1.15** | -0.10 | -0.09 |
+| eye_green | -0.03 | +0.12 | -0.04 | **+0.95** | +0.02 |
+| saturation | +1.35 | -0.00 | -0.08 | +0.04 | **+1.55** |
+
+Mean off-target effect per patch: raw 2.00 SD, orthogonalised 0.25, keep-near-duplicates 0.79; on-target: raw 1.44, orthogonalised 0.75, keep-near-duplicates 1.21.
+
+Clamp merge order (A∘B vs B∘A):
+
+| pair | cos | max weight diff | output MAE |
+|---|---|---|---|
+| fur_warmth / fur_lightness | +0.523 | 4.88e-01 | 0.0802 |
+| fur_warmth / background | +0.021 | 3.46e-02 | 0.0074 |
+| fur_warmth / eye_green | -0.320 | 6.58e-01 | 0.0989 |
+| fur_warmth / saturation | +0.949 | 2.62e-01 | 0.0484 |
+| fur_lightness / background | -0.061 | 1.12e-01 | 0.0170 |
+| fur_lightness / eye_green | -0.318 | 5.88e-01 | 0.0940 |
+| fur_lightness / saturation | +0.464 | 4.67e-01 | 0.0748 |
+| background / eye_green | -0.321 | 5.99e-01 | 0.0839 |
+| background / saturation | +0.060 | 1.05e-01 | 0.0209 |
+| eye_green / saturation | -0.334 | 6.50e-01 | 0.0985 |
+
+## Blue eyes (iris pixels from the base image; 'rest' = pixels more than 3 px from any iris pixel)
+
+Iris detected in 97% of held-out cats.
+
+| edit | params changed | eye hue | dist. to target | rest MAE | rest p99 px change |
+|---|---|---|---|---|---|
+| base | 0 | 43° | 0.247 | 0.0000 | 0.000 |
+| latent towards blue, shift 2 | 0 (input edit) | 41° | 0.226 | 0.0805 | 0.535 |
+| latent towards blue, shift 4 | 0 (input edit) | 37° | 0.222 | 0.1416 | 0.668 |
+| ungated 1x1 colour fold | 99 | 223° | 0.023 | 0.1369 | 0.425 |
+| prune2 | 1445 | 36° | 0.243 | 0.0048 | 0.033 |
+| prune2 + eye gate | 1445 | 210° | 0.158 | 0.0064 | 0.084 |
+
+Gate threshold sweep. The shipped quantile (0.97) is the strictest whose eye hue on the *fitting* images lands in 200–250°; the other columns are held-out.
+
+| quantile | fit eye hue | held-out eye hue | dist. to target | rest MAE | rest p99 px change |
+|---|---|---|---|---|---|
+| 0.9 | 223° | 223° | 0.100 | 0.0110 | 0.167 |
+| 0.95 | 223° | 220° | 0.134 | 0.0077 | 0.113 |
+| 0.97 | 219° | 210° | 0.158 | 0.0064 | 0.084 |
+| 0.98 | 62° | 67° | 0.173 | 0.0058 | 0.070 |
+| 0.99 | 36° | 37° | 0.196 | 0.0053 | 0.053 |
+| 0.995 | 36° | 35° | 0.211 | 0.0050 | 0.042 |
+
+## MobileNetV2 oracle (share of 64 samples whose top-1 ImageNet class is a domestic cat)
+
+| generator | cat rate |
+|---|---|
+| base | 97% |
+| mirror (exact) | 95% |
+| truncation 0.7 (exact) | 94% |
+| shift fur_warmth (orth, keep near-duplicates) | 98% |
+| shift fur_lightness (orth, keep near-duplicates) | 89% |
+| shift background (orth, keep near-duplicates) | 97% |
+| shift eye_green (orth, keep near-duplicates) | 100% |
+| shift saturation (orth, keep near-duplicates) | 97% |
+| clamp fur_lightness | 94% |
+| clamp background | 97% |
+| ungated 1x1 colour fold | 97% |
+| prune2 + eye gate | 95% |
+
+## Checks
+
+- shift_fold_vs_latent_edit_maxabs: 9.5367431640625e-06
+- pruned_slots: [11, 21]
+- gate_layers: ['b5c2', 'out']
+- colour_vector: [-1.1186, -0.2584, 1.6513]
+- theta_quantile: 0.97
+- mean_iris_pixels: 269.9266666666667
+- eye_patches_json_roundtrip_maxabs: 9.313225746154785e-10
+- mirror_vs_flipped_maxabs: 8.225440979003906e-06
+- truncation_fold_vs_scaled_z_maxabs: 7.659196853637695e-06

@@ -1,0 +1,611 @@
+
+======================================================================
+FILE: legacy/TinySR-18/DLSS GAN Training.py
+======================================================================
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+from keras.layers import Input, Dense, Reshape, Flatten
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
+from keras.models import Sequential, Model
+from keras.optimizers import Adam
+from sklearn.utils import shuffle
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from PIL import Image
+import skimage.transform as st
+
+
+# # Set Parameters
+
+# In[2]:
+
+
+# Folder containing input (low resolution) dataset
+input_path = r'D:\Downloads\selfie2anime\trainB'
+
+# Folder containing output (high resolution) dataset
+output_path = r'D:\Downloads\selfie2anime\trainB'
+
+# Dimensions of the images inside the dataset.
+# NOTE: The image sizes must be compatible meaning output_dimensions / input_dimensions is a multiple of 2
+input_dimensions = (128,128,3)
+
+# Dimensions of the images inside the dataset.
+# NOTE: The image sizes must be compatible meaning output_dimensions / input_dimensions is a multiple of 2
+output_dimensions = (256,256,3)
+
+# How many times to increase the resolution by 2 (by appling the UpSampling2D layer)
+super_sampling_ratio = int(output_dimensions[0] / input_dimensions[0] / 2)
+
+# Folder where you want to save to model as well as generated samples
+model_path = r"C:\Users\Vee\Desktop\python\GAN\DLSS\results"
+
+# How many epochs between saving your model
+interval = 5
+
+# How many epochs to train the model
+epoch = 100
+
+# How many images to train at one time. Ideally this number would be a factor of the size of your dataset
+batch = 25
+
+# How many convolutional filters for each convolutional layer of the generator and the discrminator
+conv_filters = 64
+
+# Size of kernel used in the convolutional layers
+kernel = (5,5)
+
+# Boolean flag, set to True if the data has pngs to remove alpha layer from images
+png = True
+
+
+# # Create Deep Convolutional GAN Class
+
+# In[3]:
+
+
+class DCGAN():
+    
+    # Initialize parameters, generator, and discriminator models
+    def __init__(self):
+        
+        # Set dimensions of the output image
+        self.img_rows = output_dimensions[0]
+        self.img_cols = output_dimensions[1]
+        self.channels = output_dimensions[2]
+        self.img_shape = (self.img_rows, self.img_cols, self.channels)
+        
+        # Shape of low resolution input image
+        self.latent_dim = input_dimensions
+        
+        # Chose optimizer for the models
+        optimizer = Adam(0.0002, 0.5)
+
+        # Build and compile the discriminator
+        self.discriminator = self.build_discriminator()
+        self.discriminator.compile(loss='binary_crossentropy',
+            optimizer=optimizer,
+            metrics=['accuracy'])
+
+        # Build the generator
+        self.generator = self.build_generator()
+        generator = self.generator
+
+        # The generator takes low resolution images as input and generates high resolution images
+        z = Input(shape = self.latent_dim)
+        img = self.generator(z)
+
+        # For the combined model we will only train the generator
+        self.discriminator.trainable = False
+
+        # The discriminator takes generated images as input and determines validity
+        valid = self.discriminator(img)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = Model(z, valid)
+        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
+    
+    # load data from specified file path 
+    def load_data(self):
+        
+        # Initializing arrays for data and image file paths
+        data = []
+        small = []
+        paths = []
+        
+        # Get the file paths of all image files in this folder
+        for r, d, f in os.walk(output_path):
+            for file in f:
+                if '.jpg' in file or 'png' in file:
+                    paths.append(os.path.join(r, file))
+                    
+        # For each file add high resolution imag
+
+======================================================================
+FILE: legacy/TinySR-18/Load Model and Analyze Results.py
+======================================================================
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[8]:
+
+
+import os
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import imshow
+from keras.models import load_model
+
+
+# # Parameters
+
+# In[21]:
+
+
+# Dimensions of the images inside the dataset.
+input_dimensions = (128,128,3)
+
+# Dimensions of the images inside the dataset.
+output_dimensions = (256,256,3)
+
+# The ratio of the difference in size of the two images. Used for setting ratio of image subplots
+super_sampling_ratio = int(output_dimensions[0] / input_dimensions[0])
+
+# Path to saved .h5 model
+model_path = r'C:\Users\Vee\Desktop\generator90.h5'
+
+# Path to folder containing images to super sample
+dataset_path = r'C:\Users\Vee\Desktop\pokemon'
+
+# Folder where you want to save to model as well as generated samples
+save_path = r'C:\Users\Vee\Desktop'
+
+# Boolean flag, set to True if the data has pngs to remove alpha layer from images
+png = True
+
+
+# # Load Model
+
+# In[19]:
+
+
+model = load_model(model_path)
+
+
+# # Load Images and Super Sample
+
+# In[29]:
+
+
+paths = []
+count = 0
+
+for r, d, f in os.walk(dataset_path):
+    for file in f:
+        if '.png' in file or 'jpg' in file:
+            paths.append(os.path.join(r, file))
+
+for path in paths:
+    
+    # Select image
+    img = Image.open(path)
+
+    #create plot
+    f, axarr = plt.subplots(1,3,figsize=(15,15),gridspec_kw={'width_ratios': [1,super_sampling_ratio,super_sampling_ratio]})
+    axarr[0].set_xlabel('Original Image (' + str(input_dimensions[0]) + 'x' + str(input_dimensions[1]) + ')', fontsize=10)
+    axarr[1].set_xlabel('Interpolated Image (' + str(output_dimensions[0]) + 'x' + str(output_dimensions[1]) + ')', fontsize=10)
+    axarr[2].set_xlabel('Super Sampled Image (' + str(output_dimensions[0]) + 'x' + str(output_dimensions[1]) + ')', fontsize=10)
+
+    #original image
+    x = img.resize((input_dimensions[0],input_dimensions[1]))
+    
+    #interpolated (resized) image
+    y = x.resize((output_dimensions[0],output_dimensions[1]))
+    
+    
+    x = np.array(x)
+    y = np.array(y)
+    
+    # Remove alpha layer if imgaes are PNG
+    if(png):
+        x = x[...,:3]
+        y = y[...,:3]
+    
+    #plotting first two images
+    axarr[0].imshow(x)
+    axarr[1].imshow(y)
+    
+    #plotting super sampled image
+    x = x.reshape(1,input_dimensions[0],input_dimensions[1],input_dimensions[2])/255
+    result = np.array(model.predict_on_batch(x))*255
+    result = result.reshape(output_dimensions[0],output_dimensions[1],output_dimensions[2])
+    np.clip(result, 0, 255, out=result)
+    result = result.astype('uint8')
+                
+    axarr[2].imshow(result)
+    
+    # Save image
+    f.savefig(save_path + '\\frame_%d.png' % count)
+    
+    # Increment file name counter
+    count = count + 1
+
+
+
+======================================================================
+FILE: legacy/TinySR-18/model.json
+======================================================================
+{"format": "layers-model", "generatedBy": "keras v2.3.1", "convertedBy": "TensorFlow.js Converter v2.0.1.post1", "modelTopology": {"keras_version": "2.3.1", "backend": "tensorflow", "model_config": {"class_name": "Model", "config": {"name": "model_5", "layers": [{"name": "input_5", "class_name": "InputLayer", "config": {"batch_input_shape": [null, 128, 128, 3], "dtype": "float32", "sparse": false, "name": "input_5"}, "inbound_nodes": []}, {"name": "sequential_4", "class_name": "Sequential", "config": {"name": "sequential_4", "layers": [{"class_name": "Conv2D", "config": {"name": "conv2d_13", "trainable": true, "batch_input_shape": [null, 128, 128, 3], "dtype": "float32", "filters": 128, "kernel_size": [3, 3], "strides": [1, 1], "padding": "same", "data_format": "channels_last", "dilation_rate": [1, 1], "activation": "linear", "use_bias": true, "kernel_initializer": {"class_name": "VarianceScaling", "config": {"scale": 1.0, "mode": "fan_avg", "distribution": "uniform", "seed": null}}, "bias_initializer": {"class_name": "Zeros", "config": {}}, "kernel_regularizer": null, "bias_regularizer": null, "activity_regularizer": null, "kernel_constraint": null, "bias_constraint": null}}, {"class_name": "LeakyReLU", "config": {"name": "leaky_re_lu_13", "trainable": true, "dtype": "float32", "alpha": 0.20000000298023224}}, {"class_name": "Conv2D", "config": {"name": "conv2d_14", "trainable": true, "dtype": "float32", "filters": 128, "kernel_size": [3, 3], "strides": [1, 1], "padding": "same", "data_format": "channels_last", "dilation_rate": [1, 1], "activation": "linear", "use_bias": true, "kernel_initializer": {"class_name": "VarianceScaling", "config": {"scale": 1.0, "mode": "fan_avg", "distribution": "uniform", "seed": null}}, "bias_initializer": {"class_name": "Zeros", "config": {}}, "kernel_regularizer": null, "bias_regularizer": null, "activity_regularizer": null, "kernel_constraint": null, "bias_constraint": null}}, {"class_name": "LeakyReLU", "config": {"name": "leaky_re_lu_14", "trainable": true, "dtype": "float32", "alpha": 0.20000000298023224}}, {"class_name": "Conv2D", "config": {"name": "conv2d_15", "trainable": true, "dtype": "float32", "filters": 128, "kernel_size": [3, 3], "strides": [1, 1], "padding": "same", "data_format": "channels_last", "dilation_rate": [1, 1], "activation": "linear", "use_bias": true, "kernel_initializer": {"class_name": "VarianceScaling", "config": {"scale": 1.0, "mode": "fan_avg", "distribution": "uniform", "seed": null}}, "bias_initializer": {"class_name": "Zeros", "config": {}}, "kernel_regularizer": null, "bias_regularizer": null, "activity_regularizer": null, "kernel_constraint": null, "bias_constraint": null}}, {"class_name": "LeakyReLU", "config": {"name": "leaky_re_lu_15", "trainable": true, "dtype": "float32", "alpha": 0.20000000298023224}}, {"class_name": "UpSampling2D", "config": {"name": "up_sampling2d_2", "trainable": true, "dtype": "float32", "size": [2, 2], "data_format": "channels_last", "interpolation": "nearest"}}, {"class_name": "Conv2D", "config": {"name": "conv2d_16", "trainable": true, "dtype": "float32", "filters": 128, "kernel_size": [3, 3], "strides": [1, 1], "padding": "same", "data_format": "channels_last", "dilation_rate": [1, 1], "activation": "linear", "use_bias": true, "kernel_initializer": {"class_name": "VarianceScaling", "config": {"scale": 1.0, "mode": "fan_avg", "distribution": "uniform", "seed": null}}, "bias_initializer": {"class_name": "Zeros", "config": {}}, "kernel_regularizer": null, "bias_regularizer": null, "activity_regularizer": null, "kernel_constraint": null, "bias_constraint": null}}, {"class_name": "LeakyReLU", "config": {"name": "leaky_re_lu_16", "trainable": true, "dtype": "float32", "alpha": 0.20000000298023224}}, {"class_name": "Conv2D", "config": {"name": "conv2d_17", "trainable": true, "dtype": "float32", "filters": 128, "kernel_size": [3, 3], "strides": [1, 1], "padding": "same", "data_format": "channels_last", "dilation_rate": [1, 1], "activat
+
+======================================================================
+FILE: legacy/PCA-GAN/PCA GAN Training.py
+======================================================================
+from keras.layers import Input, Dense, Reshape, Flatten
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.convolutional import UpSampling2D, Conv2D, MaxPooling2D
+from keras.models import Sequential, Model
+from keras.optimizers import Adam
+from sklearn.utils import shuffle
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from PIL import Image
+
+######################################################################## Set Parameters ########################################################################
+
+# Folder containing dataset
+data_path = r'D:\Downloads\cats-faces-64x64-for-generative-models\cats'
+
+# Dimensions of the images inside the dataset
+img_dimensions = (64,64,3)
+
+# Folder where you want to save to model as well as generated samples
+model_path = r"C:\Users\Vee\Desktop\python\GAN\pca_new"
+
+# How many epochs between saving your model
+interval = 5
+
+# How many epochs to run the model
+epoch = 250
+
+# How many images to train at one time
+# Ideally this number would be a factor of the size of your dataset
+batch = 181
+
+# How many convolutional filters for each convolutional layer of the generator and the discrminator
+conv_filters = 64
+
+# Size of kernel used in the convolutional layers
+kernel = (5,5)
+
+# Boolean flag, set to True if the data has pngs to remove alpha layer from images
+png = False
+
+
+######################################################################## Define Deep Convolutional GAN Class ########################################################################
+class DCGAN():
+    
+    # Initialize parameters, generator, and discriminator models
+    def __init__(self):
+        
+        # Set dimensions of the output image
+        self.img_rows = img_dimensions[0]
+        self.img_cols = img_dimensions[1]
+        self.channels = img_dimensions[2]
+        self.img_shape = (self.img_rows, self.img_cols, self.channels)
+        
+        # Set dimensions of the input noise
+        self.latent_dim = 512
+        
+        # Chose optimizer for the models
+        optimizer = Adam(0.0002, 0.5)
+
+        # Build and compile the discriminator
+        self.discriminator = self.build_discriminator()
+        self.discriminator.compile(loss='binary_crossentropy',
+            optimizer=optimizer,
+            metrics=['accuracy'])
+
+        # Build the generator
+        self.generator = self.build_generator()
+        generator = self.generator
+
+        # The generator takes noise as input and generates imgs
+        z = Input(shape=(self.latent_dim,))
+        img = self.generator(z)
+
+        # For the combined model we will only train the generator
+        self.discriminator.trainable = False
+
+        # The discriminator takes generated images as input and determines validity
+        valid = self.discriminator(img)
+
+        # The combined model  (stacked generator and discriminator)
+        # Trains the generator to fool the discriminator
+        self.combined = Model(z, valid)
+        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
+    
+    # load data from specified file path
+    def load_data(self):
+    
+        # Initializing arrays for data and image file paths
+        data = []
+        paths = []
+        
+        # Get the file paths of all jpg files in this folder
+        for r, d, f in os.walk(data_path):
+            for file in f:
+                if '.jpg' in file:
+                    paths.append(os.path.join(r, file))
+
+        # For each file add it to the data array
+        for path in paths:
+            img = Image.open(path)
+            img = np.array(img.resize((self.img_rows, self.img_cols)))
+            # Remove alpha layer if imgaes are PNG
+            if(png):
+                img = img[...,:3]
+                
+            data.append(img)
+        
+        #Reshaping data to be two dimensional for Principal Component Analysis
+        img_vector = np.array(data).reshape(len(data), self.img_rows * self.img_cols * self.channel
+
+======================================================================
+FILE: legacy/PCA-GAN/PCA GAN Inference.py
+======================================================================
+from keras.models import load_model
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from PIL import Image
+from matplotlib.pyplot import imshow
+from scipy.interpolate import interp1d
+
+######################################################################## Set Parameters ########################################################################
+
+# Folder containing dataset
+data_path = r"D:\Downloads\cats-faces-64x64-for-generative-models\cats"
+
+# Dimensions of the images inside the dataset
+img_dimensions = (64,64,3)
+
+# File path to trained model from PCA GAN Training script
+model_path = "model.h5"
+
+# Folder where you want to save generated predictions of the trained model
+save_path = r"C:\Users\Vee\Desktop\python\GAN\pca_new\walk"
+
+# Boolean flag, set to True if the data has pngs to remove alpha layer from images
+png = False
+
+######################################################################## Load Trained Generator ########################################################################
+
+model = load_model(model_path)
+
+######################################################################## Prepare X_Train Dataset for Inference ########################################################################
+
+# Initializing arrays for data and image file paths
+data = []
+paths = []
+
+# Get the file paths of all jpg files in this folder
+for r, d, f in os.walk(data_path):
+    for file in f:
+        if '.jpg' in file:
+            paths.append(os.path.join(r, file))
+
+# For each file add it to the data array
+for path in paths:
+    img = Image.open(path)
+    img = np.array(img.resize((img_dimensions[0], img_dimensions[1])))
+
+    # Remove alpha layer if imgaes are PNG
+    if(png):
+        img = img[...,:3]
+
+    data.append(img)
+
+#Reshaping data to be two dimensional for Principal Component Analysis
+img_vector = np.array(data).reshape(len(data), img_dimensions[0] * img_dimensions[1] * img_dimensions[2])/255
+
+#Keep the first 512 eigenvectors of the covariance matrix of the img_vector
+pca = PCA(n_components=512).fit(img_vector)
+pca_data = pca.transform(img_vector)
+
+# Reshape X_train to two dimensions
+x_train = pca_data.reshape(len(pca_data), 512)
+
+######################################################################## Get Random Element Of X_Train Dataset ########################################################################
+
+x_1 = x_train[(int)(np.random.rand()*len(x_train))].reshape(1,512)
+imshow(x_1.reshape(32,16))
+
+######################################################################## Generate Prediction From Random Element Of X_Train Dataset ########################################################################
+
+result = np.array(model.predict(x_1))
+result = result.reshape(1,img_dimensions[0],img_dimensions[1],img_dimensions[2])
+result = result*255
+result = result.astype(int)
+imshow(result[0])
+
+######################################################################## Get Random Element Of X_Train Dataset ########################################################################
+
+x_2 = x_train[(int)(np.random.rand()*len(x_train))].reshape(1,512)
+imshow(x_2.reshape(32,16))
+
+######################################################################## Generate Prediction From Random Element Of X_Train Dataset ########################################################################
+
+result2 = np.array(model.predict(x_2))
+result2 = result2.reshape(1,img_dimensions[0],img_dimensions[1],img_dimensions[2])
+result2 = result2*255
+result2 = result2.astype(int)
+imshow(result2[0])
+
+######################################################################## Select X_Train Points to Interpolate ########################################################################
+
+# Create placeholder array for X_train datapoints
+data_points = []
+
+# Add first data point to data_points array
+data_points.append(x_1)
+
+# Add second data point to data_points array
+data_points.append(x_2)
+
+# Add the first element of array as las
+
+======================================================================
+FILE: legacy/PCA-GAN/Model Visualization.py
+======================================================================
+from matplotlib.pyplot import imshow
+
+import numpy as np
+
+import os
+
+from PIL import Image
+
+from keras.models import load_model
+
+import keract
+
+from sklearn.decomposition import PCA
+
+######################################################################## Set Parameters ########################################################################
+
+# Folder containing dataset
+data_path = r"D:\Downloads\cats-faces-64x64-for-generative-models\cats"
+
+# Dimensions of the images inside the dataset
+img_dimensions = (64,64,3)
+
+# File path to trained model from PCA GAN Training script
+model_path = "model.h5"
+
+# Boolean flag, set to True if the data has pngs to remove alpha layer from images
+png = False
+
+######################################################################## Load Model ########################################################################
+
+# Load model from specified file path
+model = load_model(model_path)
+# Remove extra layer from model
+new = model.get_layer(index=1)
+new.summary()
+
+######################################################################## Preprocess Data ########################################################################
+
+# Initializing arrays for data and image file paths
+data = []
+paths = []
+
+# Get the file paths of all jpg files in this folder
+for r, d, f in os.walk(data_path):
+    for file in f:
+        if '.jpg' in file:
+            paths.append(os.path.join(r, file))
+
+# For each file add it to the data array
+for path in paths:
+    img = Image.open(path)
+    img = np.array(img.resize((img_dimensions[0], img_dimensions[1])))
+
+    # Remove alpha layer if imgaes are PNG
+    if(png):
+        img = img[...,:3]
+
+    data.append(img)
+
+#Reshaping data to be two dimensional for Principal Component Analysis
+img_vector = np.array(data).reshape(len(data), img_dimensions[0] * img_dimensions[1] * img_dimensions[2])/255
+
+#Keep the first 512 eigenvectors of the covariance matrix of the img_vector
+pca = PCA(n_components=512).fit(img_vector)
+pca_data = pca.transform(img_vector)
+
+# Reshape X_train to two dimensions
+x_train = pca_data.reshape(len(pca_data), 512)
+
+######################################################################## Get Random Element Of X_Train Dataset ########################################################################
+
+x = x_train[(int)(np.random.rand()*len(x_train))].reshape(1,512)
+imshow(x.reshape(32,16))
+
+######################################################################## Generate Prediction From Random Element Of X_Train Dataset ########################################################################
+
+result = np.array(model.predict(x))
+result = result.reshape(1,img_dimensions[0],img_dimensions[1],img_dimensions[2])
+result = result*255
+result = result.astype(int)
+imshow(result[0])
+
+######################################################################## Visualize Convolutional Filters ########################################################################
+
+# Get activations of each layer on the model
+activations = keract.get_activations(new, x, auto_compile=True)
+
+# Plot and save visualizations of inference through each filter
+keract.display_activations(activations, save=True)
+
+======================================================================
+WEIGHT-SPACE STATIC AUDIT: legacy/TinySR-18\generator.h5
+======================================================================
+Keras Version: 2.3.1
+Model Config JSON found in H5 attributes.
+Total Tensors: 10 | Total Parameters: 317,059
+
+Tensor: model_weights/sequential_2/conv2d_5/bias:0 | Shape: (64,) | L2: 0.3045 | Mean: -0.00921 | Std: 0.03693 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_5/kernel:0 | Shape: (5, 5, 3, 64) | L2: 2.8853 | Mean: -0.00047 | Std: 0.04164 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=0.290, med=0.357, max=0.440] | MaxCosSim: 0.412 (Pairs>0.85: 0) | LowPassRatio: 0.140
+   -> [Sample Kernel [:,:,0,0]]: [[-0.040300000458955765, 0.05820000171661377, -0.045499999076128006, -0.005799999926239252, 0.054499998688697815], [0.017100000753998756, -0.008200000040233135, 0.0778999999165535, 0.07029999792575836, 0.016100000590085983], [0.05959999933838844, 0.0544000007212162, 0.016100000590085983, 0.051100000739097595, 0.007600000128149986], [0.035599999129772186, 0.007799999788403511, -0.04149999842047691, -0.023600000888109207, 0.0608999989926815], [-0.06340000033378601, 0.013199999928474426, -0.0015999999595806003, -0.033900000154972076, 0.013899999670684338]]
+Tensor: model_weights/sequential_2/conv2d_6/bias:0 | Shape: (64,) | L2: 0.1511 | Mean: -0.00769 | Std: 0.01725 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_6/kernel:0 | Shape: (5, 5, 64, 64) | L2: 12.2768 | Mean: -0.00212 | Std: 0.03831 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=1.121, med=1.522, max=1.898] | MaxCosSim: 0.337 (Pairs>0.85: 0) | LowPassRatio: 0.226
+Tensor: model_weights/sequential_2/conv2d_7/bias:0 | Shape: (64,) | L2: 0.2044 | Mean: -0.01421 | Std: 0.02123 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_7/kernel:0 | Shape: (5, 5, 64, 64) | L2: 12.0504 | Mean: -0.00265 | Std: 0.03756 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=1.200, med=1.471, max=1.941] | MaxCosSim: 0.387 (Pairs>0.85: 0) | LowPassRatio: 0.361
+Tensor: model_weights/sequential_2/conv2d_8/bias:0 | Shape: (64,) | L2: 0.3451 | Mean: -0.00029 | Std: 0.04314 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_8/kernel:0 | Shape: (5, 5, 64, 64) | L2: 12.0993 | Mean: -0.00161 | Std: 0.03778 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=1.149, med=1.492, max=1.920] | MaxCosSim: 0.504 (Pairs>0.85: 0) | LowPassRatio: 0.319
+Tensor: model_weights/sequential_2/conv2d_9/bias:0 | Shape: (3,) | L2: 0.1064 | Mean: +0.05657 | Std: 0.02401 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_9/kernel:0 | Shape: (5, 5, 64, 3) | L2: 2.9698 | Mean: +0.00087 | Std: 0.04286 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 3 (Dead: 0) | ChNorms[min=1.678, med=1.705, max=1.760] | MaxCosSim: 0.646 (Pairs>0.85: 0) | LowPassRatio: 0.216
+   -> [Sample Kernel [:,:,0,0]]: [[0.019999999552965164, 0.03200000151991844, 0.07930000126361847, 0.011800000444054604, -0.011099999770522118], [0.059300001710653305, 0.007000000216066837, -0.006500000134110451, 0.03180000185966492, -0.021400000900030136], [0.004699999932199717, 0.044599998742341995, 0.07919999957084656, 0.14350000023841858, 0.02449999935925007], [-0.031300000846385956, 0.06520000100135803, -0.004399999976158142, -0.05270000174641609, -0.015699999406933784], [-0.034699998795986176, 0.019700000062584877, -0.11860000342130661, -0.0843999981880188, -0.07900000363588333]]
+
+======================================================================
+WEIGHT-SPACE STATIC AUDIT: legacy/PCA-GAN\model.h5
+======================================================================
+Keras Version: 2.3.1
+Model Config JSON found in H5 attributes.
+Total Tensors: 12 | Total Parameters: 587,715
+
+Tensor: model_weights/sequential_2/conv2d_10/bias:0 | Shape: (64,) | L2: 0.6029 | Mean: +0.03805 | Std: 0.06506 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_10/kernel:0 | Shape: (5, 5, 64, 64) | L2: 10.7481 | Mean: -0.00187 | Std: 0.03354 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=0.858, med=1.182, max=2.159] | MaxCosSim: 0.389 (Pairs>0.85: 0) | LowPassRatio: 0.318
+Tensor: model_weights/sequential_2/conv2d_11/bias:0 | Shape: (3,) | L2: 0.0578 | Mean: +0.03203 | Std: 0.00939 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_11/kernel:0 | Shape: (5, 5, 64, 3) | L2: 2.5155 | Mean: +0.00051 | Std: 0.03630 | NearZero%: 0.1%
+   -> [Conv4D] OutCh: 3 (Dead: 0) | ChNorms[min=1.421, med=1.462, max=1.474] | MaxCosSim: 0.752 (Pairs>0.85: 0) | LowPassRatio: 0.166
+   -> [Sample Kernel [:,:,0,0]]: [[0.026799999177455902, 0.017400000244379044, -0.014100000262260437, -0.004699999932199717, 0.04100000113248825], [0.04129999876022339, -0.010099999606609344, 0.017899999395012856, 0.017500000074505806, 0.013399999588727951], [0.008799999952316284, 0.010700000450015068, 0.06989999860525131, 0.022299999371170998, 0.030500000342726707], [0.04650000110268593, -0.008999999612569809, 0.05400000140070915, 0.016699999570846558, 0.018400000408291817], [0.011599999852478504, 0.045499999076128006, -0.0035000001080334187, 0.0007999999797903001, 0.03319999948143959]]
+Tensor: model_weights/sequential_2/conv2d_7/bias:0 | Shape: (64,) | L2: 0.7058 | Mean: -0.07267 | Std: 0.05003 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_7/kernel:0 | Shape: (5, 5, 8, 64) | L2: 2.7935 | Mean: +0.00052 | Std: 0.02469 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=0.289, med=0.345, max=0.417] | MaxCosSim: 0.341 (Pairs>0.85: 0) | LowPassRatio: 0.229
+Tensor: model_weights/sequential_2/conv2d_8/bias:0 | Shape: (64,) | L2: 0.4437 | Mean: +0.03586 | Std: 0.04231 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_8/kernel:0 | Shape: (5, 5, 64, 64) | L2: 10.6759 | Mean: -0.00341 | Std: 0.03319 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=1.258, med=1.325, max=1.495] | MaxCosSim: 0.272 (Pairs>0.85: 0) | LowPassRatio: 0.305
+Tensor: model_weights/sequential_2/conv2d_9/bias:0 | Shape: (64,) | L2: 0.5077 | Mean: +0.00957 | Std: 0.06274 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/conv2d_9/kernel:0 | Shape: (5, 5, 64, 64) | L2: 10.8391 | Mean: +0.00024 | Std: 0.03387 | NearZero%: 0.0%
+   -> [Conv4D] OutCh: 64 (Dead: 0) | ChNorms[min=1.076, med=1.343, max=1.633] | MaxCosSim: 0.413 (Pairs>0.85: 0) | LowPassRatio: 0.286
+Tensor: model_weights/sequential_2/dense_2/bias:0 | Shape: (512,) | L2: 3.0071 | Mean: +0.00586 | Std: 0.13277 | NearZero%: 0.0%
+Tensor: model_weights/sequential_2/dense_2/kernel:0 | Shape: (512, 512) | L2: 13.1733 | Mean: +0.00022 | Std: 0.02573 | NearZero%: 0.0%
+   -> [Dense2D] SVD Top-5: [4.46, 4.058, 3.261, 2.983, 2.538] | EffectiveRank: 216.5/512

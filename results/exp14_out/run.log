@@ -1,0 +1,19 @@
+fine-tunes done in 593s
+base {'bicubic LR': 32.527622933726605, 'noisy bicubic LR': 26.891242471414134, 'nearest LR': 31.121491915275854}
+branch: bicubic {'bicubic LR': 32.76084621457063, 'noisy bicubic LR': 26.422332242113868, 'nearest LR': 26.237583481778902}
+branch: noisy {'bicubic LR': 32.32387986981126, 'noisy bicubic LR': 30.152596620517098, 'nearest LR': 30.11033149265487}
+merge: base + d_bicubic + d_noisy {'bicubic LR': 32.49344068179851, 'noisy bicubic LR': 29.451571771137868, 'nearest LR': 27.06045415445544}
+merge: base + (d_bicubic + d_noisy) / 2 {'bicubic LR': 32.637521176066684, 'noisy bicubic LR': 28.779321815491585, 'nearest LR': 28.07518453136764}
+# Experiment 14: git for fine-tunes (TinySR-26 x2)
+
+Base `8cb6601c1b449ffc`. Two branches fine-tuned independently for 3,000 steps each; patches are weight deltas. cos(d_bicubic, d_noisy) = +0.088; relative size of each delta: bicubic 0.1635, noisy 0.1667. Merge order (A then B vs B then A): max weight difference 1.5e-08.
+
+PSNR (dB) on held-out AFHQ, 2x (256 -> 512), 180 images; noise σ = 8/255; Δ vs base in brackets.
+
+| model | bicubic LR | noisy bicubic LR | nearest LR |
+|---|---|---|---|
+| base | 32.53 | 26.89 | 31.12 |
+| branch: bicubic | 32.76 (+0.23) | 26.42 (-0.47) | 26.24 (-4.88) |
+| branch: noisy | 32.32 (-0.20) | 30.15 (+3.26) | 30.11 (-1.01) |
+| merge: base + d_bicubic + d_noisy | 32.49 (-0.03) | 29.45 (+2.56) | 27.06 (-4.06) |
+| merge: base + (d_bicubic + d_noisy) / 2 | 32.64 (+0.11) | 28.78 (+1.89) | 28.08 (-3.05) |

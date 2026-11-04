@@ -1,0 +1,60 @@
+{
+ "format": "weightpatch/v0",
+ "id": "merged",
+ "base": "c3003fa086c3bf20",
+ "description": "color_fold + sharpen_fold",
+ "ops": [
+  {
+   "type": "fold_output_affine",
+   "layer": "conv2d_9",
+   "M": [
+    [
+     1.205819,
+     -0.149323,
+     0.01121
+    ],
+    [
+     -0.074963,
+     1.273872,
+     -0.134629
+    ],
+    [
+     0.017164,
+     -0.120906,
+     1.120652
+    ]
+   ],
+   "t": [
+    -0.105676,
+    -0.051106,
+    -0.038006
+   ]
+  },
+  {
+   "type": "fold_output_spatial",
+   "layer": "conv2d_9",
+   "S": [
+    [
+     -0.125,
+     -0.25,
+     -0.125
+    ],
+    [
+     -0.25,
+     2.5,
+     -0.25
+    ],
+    [
+     -0.125,
+     -0.25,
+     -0.125
+    ]
+   ]
+  }
+ ],
+ "merged_from": [
+  "color_fold",
+  "sharpen_fold"
+ ],
+ "changed_params": 84
+}

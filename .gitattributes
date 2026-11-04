@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.h5 binary
+*.bin binary
+*.npz binary
+*.png binary
+*.gif binary
+*.jpg binary
+*.bundle binary

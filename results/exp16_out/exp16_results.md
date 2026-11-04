@@ -1,0 +1,35 @@
+# Experiment 16: resolving the fine-tune merge conflict (TinySR-26 x2)
+
+Spec: gain > 0 on bicubic LR and on noisy LR, and no test below base by more than 0.1 dB. Choices made on 120 fitting images (first 40 AFHQ val images per class); results on exp14's 180 test images (last 60 per class). PSNR in dB, 2x (256 -> 512); Δ vs base in brackets.
+
+| model | bicubic LR | noisy bicubic LR | nearest LR | meets spec |
+|---|---|---|---|---|
+| base | 32.53 | 26.89 | 31.12 | - |
+| branch: bicubic | 32.76 (+0.23) | 26.42 (-0.47) | 26.24 (-4.88) | no |
+| branch: noisy | 32.32 (-0.20) | 30.15 (+3.26) | 30.11 (-1.01) | no |
+| merge: sum (exp14) | 32.49 (-0.03) | 29.45 (+2.56) | 27.06 (-4.06) | no |
+| merge: average (exp14) | 32.64 (+0.11) | 28.78 (+1.89) | 28.08 (-3.05) | no |
+| (b) cherry-picked bicubic | 32.53 (+0.00) | 26.90 (+0.01) | 31.02 (-0.10) | no |
+| (b) cherry-picked noisy | 32.33 (-0.19) | 22.73 (-4.16) | 31.08 (-0.04) | no |
+| (b) merge of the two cherry-picks | 32.34 (-0.18) | 22.93 (-3.96) | 31.05 (-0.07) | no |
+| (c) sum merge + resolution commit (1k steps) | 32.34 (-0.19) | 30.19 (+3.29) | 30.90 (-0.22) | no |
+| (c) joint fine-tune from base (3k steps, no branches) | 32.56 (+0.03) | 30.08 (+3.19) | 31.20 (+0.08) | yes |
+
+(a) Weighted merges meeting the spec on the fitting split: 0 of 25.
+
+Fitting-split Δ (dB) for each weighting, as bicubic / noisy / nearest:
+
+| a \ b | 0.0 | 0.25 | 0.5 | 0.75 | 1.0 |
+|---|---|---|---|---|---|
+| 0.0 | +0.00/+0.00/+0.00 | -0.11/+0.76/-1.87 | -0.15/+1.52/-1.27 | -0.19/+2.78/-0.95 | -0.20/+3.41/-1.09 |
+| 0.25 | +0.11/-0.21/-2.07 | +0.08/+0.90/-2.48 | +0.04/+1.75/-2.05 | -0.01/+2.81/-1.80 | -0.06/+3.36/-1.90 |
+| 0.5 | +0.17/-0.42/-3.38 | +0.15/+0.71/-3.31 | +0.09/+1.70/-3.07 | +0.03/+2.54/-2.79 | -0.04/+3.10/-2.73 |
+| 0.75 | +0.21/-0.68/-4.23 | +0.17/+0.55/-4.11 | +0.11/+1.50/-3.88 | +0.04/+2.23/-3.61 | -0.05/+2.79/-3.45 |
+| 1.0 | +0.23/-0.88/-4.78 | +0.19/+0.40/-4.61 | +0.12/+1.24/-4.41 | +0.04/+1.94/-4.19 | -0.07/+2.48/-4.01 |
+
+(b) Nearest-LR change on the fitting split when only one layer group of the delta is applied (dB):
+
+- d_bicubic: head -0.09, body0 -1.28, body1 -0.69, body2 -0.48, body3 -2.35, body4 -3.11, body5 -0.65, tail -0.14, up -0.54; cherry-pick drops ['body4', 'body3', 'body0', 'body1', 'body5', 'up', 'body2', 'tail']
+- d_noisy: head -0.41, body0 -1.87, body1 -2.02, body2 -1.12, body3 -0.15, body4 +0.06, body5 -0.03, tail -0.14, up -0.30; cherry-pick drops ['body1', 'body0', 'body2', 'head', 'up', 'body3', 'tail']
+
+(c) Resolution commit: 1,000 steps from the sum merge on a mix of clean bicubic, noisy bicubic and clean nearest LR; stored as a delta of relative size 0.0968. Joint fine-tune: the same mix from the base for 3,000 steps.

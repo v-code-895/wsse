@@ -1,0 +1,207 @@
+{
+ "A": {
+  "recovered_mean": [
+   122.26,
+   116.18,
+   102.86
+  ],
+  "published_mean": [
+   123.68,
+   116.78,
+   103.94
+  ],
+  "mean_fit_r2": 0.9999591938959297,
+  "recovered_std": [
+   77.15,
+   67.18,
+   75.05
+  ],
+  "published_std": [
+   58.395,
+   57.12,
+   57.375
+  ],
+  "std_fit_r2": 1.0,
+  "recovered_spatial_corr_1px": 0.9565194711423352,
+  "recovered_colour_corr": [
+   [
+    1.0,
+    0.807,
+    0.737
+   ],
+   [
+    0.807,
+    1.0,
+    0.828
+   ],
+   [
+    0.737,
+    0.828,
+    1.0
+   ]
+  ],
+  "dog_nn_rate": 0.9813559322033898,
+  "dog_chance": 0.11711711711711711,
+  "neighbours": {
+   "tabby": [
+    "Egyptian_cat",
+    "tiger_cat",
+    "Persian_cat",
+    "lynx",
+    "Siamese_cat"
+   ],
+   "coffee_mug": [
+    "cup",
+    "espresso",
+    "goblet",
+    "teapot",
+    "beer_glass"
+   ],
+   "sports_car": [
+    "racer",
+    "car_wheel",
+    "convertible",
+    "grille",
+    "passenger_car"
+   ],
+   "Granny_Smith": [
+    "lemon",
+    "tennis_ball",
+    "cucumber",
+    "orange",
+    "banana"
+   ]
+  },
+  "method_check_own_images": {
+   "recovered_std": [
+    64.65,
+    64.94,
+    61.41
+   ],
+   "true_std": [
+    67.12999725341797,
+    61.650001525878906,
+    62.79999923706055
+   ]
+  }
+ },
+ "B_fold": {
+  "params_before": 3538984,
+  "params_after": 3487816,
+  "bn_layers_removed": 52,
+  "max_logit_diff": 5.507469177246094e-05
+ },
+ "B_lowrank": {
+  "classifier_params": 1280000,
+  "share_of_model": 0.3616857267509545,
+  "rows": [
+   {
+    "rank": 32,
+    "params": 72960,
+    "saved": 1207040,
+    "top1_agree": 0.22,
+    "top5_contains_top1": 0.42,
+    "kl": 2.7575601594575163
+   },
+   {
+    "rank": 64,
+    "params": 145920,
+    "saved": 1134080,
+    "top1_agree": 0.34,
+    "top5_contains_top1": 0.61,
+    "kl": 2.0408428933457508
+   },
+   {
+    "rank": 128,
+    "params": 291840,
+    "saved": 988160,
+    "top1_agree": 0.48,
+    "top5_contains_top1": 0.8,
+    "kl": 1.1286320737380837
+   },
+   {
+    "rank": 256,
+    "params": 583680,
+    "saved": 696320,
+    "top1_agree": 0.8,
+    "top5_contains_top1": 0.98,
+    "kl": 0.2675548535212521
+   },
+   {
+    "rank": 384,
+    "params": 875520,
+    "saved": 404480,
+    "top1_agree": 0.84,
+    "top5_contains_top1": 1.0,
+    "kl": 0.08741983892833702
+   },
+   {
+    "rank": 512,
+    "params": 1167360,
+    "saved": 112640,
+    "top1_agree": 0.92,
+    "top5_contains_top1": 1.0,
+    "kl": 0.02501690652137275
+   },
+   {
+    "rank": 768,
+    "params": 1751040,
+    "saved": -471040,
+    "top1_agree": 0.95,
+    "top5_contains_top1": 1.0,
+    "kl": 0.003931400913869368
+   }
+  ],
+  "energy_99_rank": 814
+ },
+ "C": {
+  "n_images": 20,
+  "raw 0-255 fed to original": 0.0,
+  "raw 0-255 fed to folded model": 1.0,
+  "BGR fed to original": 0.7,
+  "BGR fed to channel-swapped model": 1.0,
+  "[0,1] fed to original": 0.55,
+  "raw fold max logit diff": 1.6156089305877686,
+  "raw fold + pad 127.5 max logit diff": 2.5272369384765625e-05,
+  "bgr fold max logit diff": 2.3365020751953125e-05
+ },
+ "D": {
+  "what the original model called the generated faces": {
+   "bolo_tie": 6,
+   "neck_brace": 5,
+   "overskirt": 1,
+   "sunglass": 5,
+   "sweatshirt": 1,
+   "wig": 6
+  },
+  "what the original model called the real anime frame": [
+   "mortarboard",
+   "mortarboard",
+   "mortarboard",
+   "mortarboard",
+   "mortarboard"
+  ],
+  "methods": {
+   "fisher": {
+    "fit_gap": 17.055939361392642,
+    "n_neg_fit": 146,
+    "held-out generated faces -> new class": 1.0,
+    "real anime frame (5 crops) -> new class": 1.0,
+    "held-out negatives -> new class (false positive)": 0.0,
+    "held-out negatives: original top-1 unchanged": 1.0,
+    "hard negatives (cartoon, painting, photo) -> new class": 0.0,
+    "Lisa Simpson cartoon (5 crops) -> new class": 0.0
+   },
+   "cosine": {
+    "fit_gap": 11.154117584228516,
+    "n_neg_fit": 146,
+    "held-out generated faces -> new class": 1.0,
+    "real anime frame (5 crops) -> new class": 1.0,
+    "held-out negatives -> new class (false positive)": 0.0,
+    "held-out negatives: original top-1 unchanged": 1.0,
+    "hard negatives (cartoon, painting, photo) -> new class": 0.06666666666666667,
+    "Lisa Simpson cartoon (5 crops) -> new class": 0.0
+   }
+  }
+ }
+}

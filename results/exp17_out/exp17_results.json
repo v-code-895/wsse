@@ -1,0 +1,430 @@
+{
+ "base": "be2b16ff52fc4021",
+ "repo": "exp5_cat_subspace_out/weightrepo",
+ "original": {
+  "hash": "0606c0c758456bef",
+  "all_pass": true,
+  "rows": [
+   {
+    "patch": "prune2",
+    "test": "rest-of-image MAE",
+    "value": 0.003175373887643218,
+    "bound": "max=0.015",
+    "pass": true
+   },
+   {
+    "patch": "eye_gate",
+    "test": "eye hue (deg)",
+    "value": 224.6348114013672,
+    "bound": "min=200 max=250",
+    "pass": true
+   },
+   {
+    "patch": "eye_gate",
+    "test": "rest-of-image MAE",
+    "value": 0.0003643381642177701,
+    "bound": "max=0.015",
+    "pass": true
+   },
+   {
+    "patch": "lock_background",
+    "test": "var ratio background vs base",
+    "value": 0.11429568380117416,
+    "bound": "max=0.3",
+    "pass": true
+   },
+   {
+    "patch": "lock_fur_lightness",
+    "test": "var ratio fur_lightness vs base",
+    "value": 0.10120324045419693,
+    "bound": "max=0.3",
+    "pass": true
+   }
+  ]
+ },
+ "upstream": {
+  "+500": {
+   "step": 30500,
+   "hash": "16dc3747b8fa5ec6",
+   "drift": {
+    "rel_weight_change": 0.03671271353960037,
+    "output_mae": 0.0448337085545063,
+    "attr_corr": {
+     "fur_warmth": 0.9913696012251051,
+     "fur_lightness": 0.979931766445106,
+     "background": 0.9730836760986462,
+     "eye_green": 0.9758572970486292,
+     "saturation": 0.9914836194836059
+    }
+   },
+   "rebase": [
+    {
+     "patch": "prune2",
+     "ops": 4,
+     "context_drift": 0.028230468850306497,
+     "stale": true
+    },
+    {
+     "patch": "eye_gate",
+     "ops": 3,
+     "context_drift": 0.028230468850306497,
+     "stale": true
+    },
+    {
+     "patch": "lock_fur_lightness",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    },
+    {
+     "patch": "lock_background",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    }
+   ],
+   "replay": {
+    "hash": "8da40a1ff02ad01a",
+    "all_pass": true,
+    "rows": [
+     {
+      "patch": "prune2",
+      "test": "rest-of-image MAE",
+      "value": 0.005722410045564175,
+      "bound": "max=0.015",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "eye hue (deg)",
+      "value": 226.98422241210938,
+      "bound": "min=200 max=250",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "rest-of-image MAE",
+      "value": 0.004804583732038736,
+      "bound": "max=0.015",
+      "pass": true
+     },
+     {
+      "patch": "lock_background",
+      "test": "var ratio background vs base",
+      "value": 0.10878156125545502,
+      "bound": "max=0.3",
+      "pass": true
+     },
+     {
+      "patch": "lock_fur_lightness",
+      "test": "var ratio fur_lightness vs base",
+      "value": 0.10369303822517395,
+      "bound": "max=0.3",
+      "pass": true
+     }
+    ]
+   }
+  },
+  "+1000": {
+   "step": 31000,
+   "hash": "ea796143128debd7",
+   "drift": {
+    "rel_weight_change": 0.0653676688671112,
+    "output_mae": 0.06683322787284851,
+    "attr_corr": {
+     "fur_warmth": 0.9827014229286882,
+     "fur_lightness": 0.9632665409619026,
+     "background": 0.9438199489854884,
+     "eye_green": 0.9517075031805871,
+     "saturation": 0.9870109588673084
+    }
+   },
+   "rebase": [
+    {
+     "patch": "prune2",
+     "ops": 4,
+     "context_drift": 0.07097042208668916,
+     "stale": true
+    },
+    {
+     "patch": "eye_gate",
+     "ops": 3,
+     "context_drift": 0.07097042208668916,
+     "stale": true
+    },
+    {
+     "patch": "lock_fur_lightness",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    },
+    {
+     "patch": "lock_background",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    }
+   ],
+   "replay": {
+    "hash": "95e42cade9912aa1",
+    "all_pass": true,
+    "rows": [
+     {
+      "patch": "prune2",
+      "test": "rest-of-image MAE",
+      "value": 0.009153139777481556,
+      "bound": "max=0.015",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "eye hue (deg)",
+      "value": 229.12014770507812,
+      "bound": "min=200 max=250",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "rest-of-image MAE",
+      "value": 0.008703471161425114,
+      "bound": "max=0.015",
+      "pass": true
+     },
+     {
+      "patch": "lock_background",
+      "test": "var ratio background vs base",
+      "value": 0.126957505941391,
+      "bound": "max=0.3",
+      "pass": true
+     },
+     {
+      "patch": "lock_fur_lightness",
+      "test": "var ratio fur_lightness vs base",
+      "value": 0.11161845177412033,
+      "bound": "max=0.3",
+      "pass": true
+     }
+    ]
+   }
+  },
+  "+2000": {
+   "step": 32000,
+   "hash": "e6707e1c7176bfde",
+   "drift": {
+    "rel_weight_change": 0.11136462539434433,
+    "output_mae": 0.09407085180282593,
+    "attr_corr": {
+     "fur_warmth": 0.9331263817191062,
+     "fur_lightness": 0.9456026865589017,
+     "background": 0.8922434811838762,
+     "eye_green": 0.8986378460306298,
+     "saturation": 0.9242998577901416
+    }
+   },
+   "rebase": [
+    {
+     "patch": "prune2",
+     "ops": 4,
+     "context_drift": 0.1321713333353087,
+     "stale": true
+    },
+    {
+     "patch": "eye_gate",
+     "ops": 3,
+     "context_drift": 0.1321713333353087,
+     "stale": true
+    },
+    {
+     "patch": "lock_fur_lightness",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    },
+    {
+     "patch": "lock_background",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    }
+   ],
+   "replay": {
+    "hash": "3f9c0f57d7a67dea",
+    "all_pass": false,
+    "rows": [
+     {
+      "patch": "prune2",
+      "test": "rest-of-image MAE",
+      "value": 0.02354258857667446,
+      "bound": "max=0.015",
+      "pass": false
+     },
+     {
+      "patch": "eye_gate",
+      "test": "eye hue (deg)",
+      "value": 227.8016357421875,
+      "bound": "min=200 max=250",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "rest-of-image MAE",
+      "value": 0.02380121499300003,
+      "bound": "max=0.015",
+      "pass": false
+     },
+     {
+      "patch": "lock_background",
+      "test": "var ratio background vs base",
+      "value": 0.1338435411453247,
+      "bound": "max=0.3",
+      "pass": true
+     },
+     {
+      "patch": "lock_fur_lightness",
+      "test": "var ratio fur_lightness vs base",
+      "value": 0.15436488389968872,
+      "bound": "max=0.3",
+      "pass": true
+     }
+    ]
+   }
+  },
+  "+4000": {
+   "step": 34000,
+   "hash": "bf629f2a3ba0b126",
+   "drift": {
+    "rel_weight_change": 0.17861953377723694,
+    "output_mae": 0.1267555207014084,
+    "attr_corr": {
+     "fur_warmth": 0.8854638232555138,
+     "fur_lightness": 0.8468694037810377,
+     "background": 0.831371902962926,
+     "eye_green": 0.8050069834034332,
+     "saturation": 0.8665705833435583
+    }
+   },
+   "rebase": [
+    {
+     "patch": "prune2",
+     "ops": 4,
+     "context_drift": 0.20405007922828133,
+     "stale": true
+    },
+    {
+     "patch": "eye_gate",
+     "ops": 3,
+     "context_drift": 0.20405007922828133,
+     "stale": true
+    },
+    {
+     "patch": "lock_fur_lightness",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    },
+    {
+     "patch": "lock_background",
+     "ops": 2,
+     "context_drift": null,
+     "stale": false
+    }
+   ],
+   "replay": {
+    "hash": "b036511aabeabfa5",
+    "all_pass": false,
+    "rows": [
+     {
+      "patch": "prune2",
+      "test": "rest-of-image MAE",
+      "value": 0.025253670290112495,
+      "bound": "max=0.015",
+      "pass": false
+     },
+     {
+      "patch": "eye_gate",
+      "test": "eye hue (deg)",
+      "value": 225.39520263671875,
+      "bound": "min=200 max=250",
+      "pass": true
+     },
+     {
+      "patch": "eye_gate",
+      "test": "rest-of-image MAE",
+      "value": 0.024598198011517525,
+      "bound": "max=0.015",
+      "pass": false
+     },
+     {
+      "patch": "lock_background",
+      "test": "var ratio background vs base",
+      "value": 0.29388177394866943,
+      "bound": "max=0.3",
+      "pass": true
+     },
+     {
+      "patch": "lock_fur_lightness",
+      "test": "var ratio fur_lightness vs base",
+      "value": 0.161446213722229,
+      "bound": "max=0.3",
+      "pass": true
+     }
+    ]
+   }
+  }
+ },
+ "regenerated": {
+  "step": 34000,
+  "seconds": 650.991461277008,
+  "tests": {
+   "hash": "b80a1cce95f647ee",
+   "all_pass": false,
+   "rows": [
+    {
+     "patch": "prune2",
+     "test": "rest-of-image MAE",
+     "value": 0.007924693636596203,
+     "bound": "max=0.015",
+     "pass": true
+    },
+    {
+     "patch": "eye_gate",
+     "test": "eye hue (deg)",
+     "value": 25.97490692138672,
+     "bound": "min=200 max=250",
+     "pass": false
+    },
+    {
+     "patch": "eye_gate",
+     "test": "rest-of-image MAE",
+     "value": 0.003784450702369213,
+     "bound": "max=0.015",
+     "pass": true
+    },
+    {
+     "patch": "lock_background",
+     "test": "var ratio background vs base",
+     "value": 0.08436404168605804,
+     "bound": "max=0.3",
+     "pass": true
+    },
+    {
+     "patch": "lock_fur_lightness",
+     "test": "var ratio fur_lightness vs base",
+     "value": 0.1267273724079132,
+     "bound": "max=0.3",
+     "pass": true
+    }
+   ]
+  },
+  "exp15": {
+   "fur_lightness": {
+    "rank": 2,
+    "var_ratio": 0.17368659377098083
+   },
+   "background": {
+    "rank": 4,
+    "var_ratio": 0.14677391946315765
+   }
+  }
+ }
+}

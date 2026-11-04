@@ -1,0 +1,72 @@
+{
+ "format": "weightpatch/v0",
+ "id": "color_fold_black",
+ "base": "c3003fa086c3bf20",
+ "description": "affine color fold with near-black pixels weighted x1",
+ "ops": [
+  {
+   "type": "fold_output_affine",
+   "layer": "conv2d_9",
+   "M": [
+    [
+     1.205819,
+     -0.149323,
+     0.01121
+    ],
+    [
+     -0.074963,
+     1.273872,
+     -0.134629
+    ],
+    [
+     0.017164,
+     -0.120906,
+     1.120652
+    ]
+   ],
+   "t": [
+    -0.105676,
+    -0.051106,
+    -0.038006
+   ]
+  }
+ ],
+ "fit": {
+  "split": "calib",
+  "dark_weight": 1,
+  "selection": "smallest weight halving calib black floor",
+  "pareto": [
+   {
+    "dark_weight": 1,
+    "calib_psnr": 26.865,
+    "calib_black_floor": 7.91
+   },
+   {
+    "dark_weight": 4,
+    "calib_psnr": 26.652,
+    "calib_black_floor": 7.6
+   },
+   {
+    "dark_weight": 16,
+    "calib_psnr": 24.395,
+    "calib_black_floor": 7.01
+   },
+   {
+    "dark_weight": 64,
+    "calib_psnr": 18.945,
+    "calib_black_floor": 5.52
+   },
+   {
+    "dark_weight": 256,
+    "calib_psnr": 14.012,
+    "calib_black_floor": 3.36
+   },
+   {
+    "dark_weight": 1024,
+    "calib_psnr": 11.803,
+    "calib_black_floor": 2.02
+   }
+  ]
+ },
+ "changed_params": 12
+}

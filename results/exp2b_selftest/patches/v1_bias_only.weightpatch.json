@@ -1,0 +1,18 @@
+{
+ "format": "weightpatch/v0",
+ "id": "v1_bias_only",
+ "base": "c3003fa086c3bf20",
+ "description": "ablation: zero output bias only",
+ "ops": [
+  {
+   "type": "set_bias",
+   "layer": "conv2d_9",
+   "value": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "changed_params": 3
+}

@@ -1,0 +1,65 @@
+[tinysr26_x2] 276,732 parameters
+step 500 loss 0.0248 44s
+step 1000 loss 0.0223 83s
+step 1500 loss 0.0218 131s
+step 2000 loss 0.0204 180s
+step 2500 loss 0.0217 223s
+step 3000 loss 0.0207 266s
+step 3500 loss 0.0205 312s
+step 4000 loss 0.0200 358s
+step 4500 loss 0.0203 406s
+step 5000 loss 0.0209 454s
+step 5500 loss 0.0197 494s
+step 6000 loss 0.0201 534s
+step 6500 loss 0.0204 562s
+step 7000 loss 0.0199 593s
+step 7500 loss 0.0192 620s
+step 8000 loss 0.0198 656s
+step 8500 loss 0.0196 704s
+step 9000 loss 0.0198 751s
+step 9500 loss 0.0202 803s
+step 10000 loss 0.0193 854s
+{"step": 10000, "loss": 0.01926275015249098, "bicubic": {"model": 33.38173493288478, "bicubic": 32.3606098780477}, "nearest": {"model": 31.598239432441048, "bicubic": 29.52112438452252}}
+step 10500 loss 0.0190 917s
+step 11000 loss 0.0204 967s
+step 11500 loss 0.0188 1016s
+step 12000 loss 0.0188 1064s
+step 12500 loss 0.0203 1115s
+step 13000 loss 0.0189 1164s
+step 13500 loss 0.0195 1213s
+step 14000 loss 0.0196 1263s
+step 14500 loss 0.0193 1312s
+step 15000 loss 0.0194 1357s
+step 15500 loss 0.0195 1403s
+step 16000 loss 0.0198 1449s
+step 16500 loss 0.0190 1495s
+step 17000 loss 0.0196 1541s
+step 17500 loss 0.0196 1586s
+step 18000 loss 0.0186 1632s
+step 18500 loss 0.0188 1675s
+step 19000 loss 0.0189 1721s
+step 19500 loss 0.0187 1768s
+step 20000 loss 0.0197 1814s
+{"step": 20000, "loss": 0.01974996340466393, "bicubic": {"model": 33.52233250099808, "bicubic": 32.3606098780477}, "nearest": {"model": 32.183990879819476, "bicubic": 29.52112438452252}}
+step 20500 loss 0.0193 1871s
+step 21000 loss 0.0192 1915s
+step 21500 loss 0.0191 1961s
+step 22000 loss 0.0187 2007s
+step 22500 loss 0.0197 2054s
+step 23000 loss 0.0196 2099s
+step 23500 loss 0.0192 2145s
+step 24000 loss 0.0195 2191s
+step 24500 loss 0.0193 2237s
+step 25000 loss 0.0186 2290s
+step 25500 loss 0.0179 2340s
+step 26000 loss 0.0190 2388s
+step 26500 loss 0.0187 2435s
+step 27000 loss 0.0193 2480s
+step 27500 loss 0.0190 2530s
+step 28000 loss 0.0196 2577s
+step 28500 loss 0.0181 2624s
+step 29000 loss 0.0182 2672s
+step 29500 loss 0.0188 2721s
+step 30000 loss 0.0192 2769s
+{"step": 30000, "loss": 0.019227046019828394, "bicubic": {"model": 33.546249187461406, "bicubic": 32.3606098780477}, "nearest": {"model": 32.220529415926045, "bicubic": 29.52112438452252}}
+{"numpy": 1.7583370208740234e-06, "torch_functional": 0.0}

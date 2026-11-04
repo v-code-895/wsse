@@ -1,0 +1,41 @@
+  fur_lightness k=5: var ratio 0.018 (40s)
+  fur_lightness k=10: var ratio 0.005 (79s)
+  fur_lightness k=15: var ratio 0.003 (118s)
+[fur_lightness] rank 2: var ratio 0.191 (rank 1: 0.722, random rank 2: 0.720)
+  background k=5: var ratio 0.055 (39s)
+  background k=10: var ratio 0.003 (78s)
+  background k=15: var ratio 0.001 (117s)
+[background] rank 2: var ratio 0.178 (rank 1: 0.431, random rank 2: 0.431)
+base {'frechet_vs_val': 78.25132507309485, 'feature_diversity_vs_val': 0.934525858559268, 'domestic_cat_rate': 0.97} 56s
+rank1_fur_lightness {'frechet_vs_val': 110.94231942514955, 'feature_diversity_vs_val': 0.9385600587906937, 'domestic_cat_rate': 0.94} 55s
+rankk_fur_lightness {'frechet_vs_val': 143.26139945826753, 'feature_diversity_vs_val': 0.7789977842036379, 'domestic_cat_rate': 0.93} 56s
+random_fur_lightness {'frechet_vs_val': 110.13929344544835, 'feature_diversity_vs_val': 0.9383390346567081, 'domestic_cat_rate': 0.9466666666666667} 57s
+rank1_background {'frechet_vs_val': 87.81554996083383, 'feature_diversity_vs_val': 0.9571957007616123, 'domestic_cat_rate': 0.98} 57s
+rankk_background {'frechet_vs_val': 95.068015712776, 'feature_diversity_vs_val': 0.9276956906730115, 'domestic_cat_rate': 0.9833333333333333} 56s
+random_background {'frechet_vs_val': 88.23489135843585, 'feature_diversity_vs_val': 0.9605111553475224, 'domestic_cat_rate': 0.98} 56s
+# Experiment 15: subspace locks on CatGAN-26
+
+Base `be2b16ff52fc4021`. Rank chosen on 1024 selection latents as the smallest k with variance ratio <= 0.2 (test bound 0.3); gradients from 1024 other latents.
+
+| lock | rank-1 var ratio | chosen rank k | rank-k var ratio | random rank-k control | other attributes (rank-k), var ratio |
+|---|---|---|---|---|---|
+| fur_lightness | 0.722 | 2 | 0.191 | 0.720 | fur_warmth 0.95, background 0.88, eye_green 1.08, saturation 1.02 |
+| background | 0.431 | 2 | 0.178 | 0.431 | fur_warmth 0.59, fur_lightness 1.18, eye_green 0.93, saturation 0.38 |
+
+Variance ratio by rank: fur_lightness: k=1 0.72, k=2 0.19, k=3 0.05, k=5 0.02, k=8 0.01, k=12 0.00, k=16 0.00; background: k=1 0.43, k=2 0.18, k=3 0.12, k=5 0.06, k=8 0.01, k=12 0.00, k=16 0.00
+
+Subspace cosines (principal angles) between the two rank-k locks: [0.547, 0.148]. Joint lock (span of both, targets kept): fur_warmth 0.28, fur_lightness 0.08, background 0.14, eye_green 1.09, saturation 0.30
+
+MobileNetV2 on 300 samples per set (Frechet distance to 300 AFHQ val cats; diversity = trace of the feature covariance relative to the real cats):
+
+| generator | Frechet distance | feature diversity | domestic-cat rate |
+|---|---|---|---|
+| base | 78.3 | 0.935 | 97.0% |
+| rank1_fur_lightness | 110.9 | 0.939 | 94.0% |
+| rankk_fur_lightness | 143.3 | 0.779 | 93.0% |
+| random_fur_lightness | 110.1 | 0.938 | 94.7% |
+| rank1_background | 87.8 | 0.957 | 98.0% |
+| rankk_background | 95.1 | 0.928 | 98.3% |
+| random_background | 88.2 | 0.961 | 98.0% |
+
+Checks: torch_attr_vs_numpy_maxabs 3.0e-07, fur_lightness_fold_vs_latent_edit_maxabs 4.1e-06, fur_lightness_latent_edit_vs_projection_maxabs 1.3e-07, background_fold_vs_latent_edit_maxabs 3.7e-06, background_latent_edit_vs_projection_maxabs 2.3e-07

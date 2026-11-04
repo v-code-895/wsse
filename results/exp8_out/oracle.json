@@ -1,0 +1,42 @@
+{
+ "base": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "mirror (exact)": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "rotate 90 (exact)": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "pencil sketch": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "duotone": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "sepia": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "warm hair (exp3 patch)": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "magenta eyes (exp4 patches)": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "latent x3 (off-distribution input)": {
+  "anime_face_rate": 1.0,
+  "most_common_label": "ANIME_FACE (new) (16)"
+ },
+ "random weights (control)": {
+  "anime_face_rate": 0.0625,
+  "most_common_label": "prayer_rug (15), ANIME_FACE (new) (1)"
+ }
+}

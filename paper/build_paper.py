@@ -8,6 +8,7 @@ prints it to PDF. Needs an internet connection for the two scripts (cdn.jsdelivr
   python paper/build_paper.py --browser "C:/path/to/chrome.exe"
 """
 import argparse, html, json, os, re, shutil, subprocess, sys, tempfile
+from datetime import datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MARKED = "https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"
@@ -28,6 +29,7 @@ header.title { text-align: center; margin-bottom: 8mm; }
 header.title h1 { font-size: 17pt; line-height: 1.25; margin: 0 0 4mm; border: none; }
 header.title .authors { font-size: 11.5pt; }
 header.title .date { color: var(--muted); font-size: 10pt; margin-top: 1.5mm; }
+header.title .links { font-size: 10.5pt; margin-top: 2.5mm; }
 h1 { font-size: 14pt; margin: 9mm 0 3mm; padding-bottom: 1mm; border-bottom: 1px solid var(--rule); break-after: avoid; }
 h2 { font-size: 12.5pt; margin: 7mm 0 2mm; break-after: avoid; }
 h3 { font-size: 11pt; margin: 5mm 0 1.5mm; break-after: avoid; }
@@ -47,7 +49,8 @@ a { color: var(--link); text-decoration: none; }
 mjx-container[display="true"] { margin: 2mm 0 !important; }
 mjx-container { font-size: 96% !important; }
 #refs + ol, .refs p { font-size: 9.2pt; }
-@media print { body { padding: 0; } main > :last-child { margin-bottom: 0; } }
+@media print { body { padding: 0; } main > :last-child { margin-bottom: 0; } header.title .links { display: none; } }
+@media (max-width: 700px) { body { padding: 6mm 4mm; font-size: 11pt; } table { font-size: 8pt; display: block; overflow-x: auto; } }
 """
 
 def front_matter(md):
@@ -61,18 +64,41 @@ def front_matter(md):
             if val: meta[key] = val
     return meta, md[m.end():]
 
+def head_meta(meta, authors, abstract, pdf_name):
+    """Sharing previews (Open Graph) and the citation_* tags Google Scholar reads, when the front
+    matter names the published site (`site:`); `doi:` and `image:` are optional."""
+    site, doi, title = meta.get("site", ""), meta.get("doi", ""), meta.get("title", "")
+    tags = [("name", "description", abstract)]
+    if site:
+        site = site.rstrip("/") + "/"
+        tags += [("name", "citation_title", title)] + [("name", "citation_author", a) for a in authors]
+        try: tags.append(("name", "citation_publication_date", datetime.strptime(meta.get("date", "").split(" (")[0], "%B %d, %Y").strftime("%Y/%m/%d")))
+        except ValueError: pass
+        tags += [("name", "citation_pdf_url", site + pdf_name), ("property", "og:type", "article"), ("property", "og:title", title),
+                 ("property", "og:description", abstract), ("property", "og:url", site)]
+        if meta.get("image"): tags += [("property", "og:image", site + meta["image"]), ("name", "twitter:card", "summary_large_image")]
+    if doi: tags.append(("name", "citation_doi", doi))
+    return "\n".join(f'<meta {k}="{v}" content="{html.escape(c, quote=True)}">' for k, v, c in tags)
+
 def build_html(md_path, html_path):
     meta, body = front_matter(open(md_path, encoding="utf-8").read())
     body = re.sub(r"<!--.*?-->\n?", "", body, flags=re.S)
     authors = meta.get("author", [])
     authors = authors if isinstance(authors, list) else [authors]
+    pdf_name = os.path.splitext(os.path.basename(md_path))[0] + ".pdf"
+    m = re.search(r"## Abstract\s+(.+?)\n\n", body, re.S)
+    abstract = re.sub(r"\s+", " ", re.sub(r"[*`_]|\s*\[\d+(?:, *\d+)*\]", "", m.group(1))).strip() if m else ""
+    links = [("PDF", pdf_name)] + ([("Code", meta["code"])] if meta.get("code") else []) \
+            + ([(f"DOI {meta['doi']}", "https://doi.org/" + meta["doi"])] if meta.get("doi") else [])
     head = (f'<header class="title"><h1>{html.escape(meta.get("title", ""))}</h1>'
             f'<div class="authors">{" &nbsp;·&nbsp; ".join(html.escape(a) for a in authors)}</div>'
-            f'<div class="date">{html.escape(meta.get("date", ""))}</div></header>')
+            f'<div class="date">{html.escape(meta.get("date", ""))}</div>'
+            f'<nav class="links">{" &nbsp;·&nbsp; ".join(f"<a href={chr(34)}{html.escape(u)}{chr(34)}>{html.escape(t)}</a>" for t, u in links)}</nav></header>')
     payload = json.dumps(body).replace("</", "<\\/")
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(meta.get("title", "paper"))}</title>
+{head_meta(meta, authors, abstract, pdf_name)}
 <style>{CSS}</style>
 <script>window.MathJax = {{ tex: {{ inlineMath: [["\\\\(", "\\\\)"]], displayMath: [["\\\\[", "\\\\]"]] }},
   svg: {{ fontCache: "global" }}, startup: {{ typeset: false }} }};</script>

@@ -1,0 +1,39 @@
+# Publishes the paper (paper/wsse.html as the front page, with its PDF and figures) to GitHub Pages
+# whenever it changes on main. Rebuild the HTML/PDF locally first: python paper/build_paper.py
+name: Paper site
+
+on:
+  push:
+    branches: [main]
+    paths: ["paper/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Assemble the site from paper/
+        run: |
+          mkdir _site
+          cp paper/wsse.html _site/index.html
+          cp paper/wsse.pdf _site/
+          cp -r paper/figures _site/
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v5

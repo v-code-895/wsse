@@ -10,7 +10,7 @@ context of all the others*, flags pairs of patches whose order changes the model
 patch set onto an updated checkpoint. Because everything is text, ordinary `git` does the rest:
 branches, merges, reverts, history.
 
-Paper: [`paper/wsse.pdf`](paper/wsse.pdf) (source [`paper/wsse.md`](paper/wsse.md)).
+Paper: **[read online](https://v-code-895.github.io/wsse/)** · [`paper/wsse.pdf`](paper/wsse.pdf) (source [`paper/wsse.md`](paper/wsse.md)).
 
 ![CatGAN-26 under version control](paper/figures/fig1_cat_repository.png)
 

@@ -4,6 +4,10 @@ author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
 date: November 4, 2026 (version 1.0)
+site: https://v-code-895.github.io/wsse/
+code: https://github.com/v-code-895/wsse
+doi: 10.5281/zenodo.23956114
+image: figures/fig1_cat_repository.png
 ---
 
 <!-- Every number traces to a file under results/ (Appendix A). Maths is LaTeX: `python paper/build_paper.py` builds wsse.html and wsse.pdf. -->

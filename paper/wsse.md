@@ -379,11 +379,11 @@ The harness written in response (`exp2b`) tests itself first, on a stand-in netw
 
 | model | refactor | parameters | max output difference |
 |---|---|---|---|
-| Recycle-Bot | fold 5 BatchNorms; collapse the linear–Dropout–linear head | 741,121 → 151,809 (−80%) | $2.9\times10^{-6}$ |
-| MobileNetV2 | fold all 52 BatchNorms | 3,538,984 → 3,487,816 | $5.5\times10^{-5}$ (logits) |
-| MobileNetV2 | fold uint8 preprocessing ($x/127.5 - 1$) into Conv1, with padding value 127.5 | unchanged | $2.5\times10^{-5}$ |
-| MobileNetV2 | fold an RGB → BGR swap into Conv1 | unchanged | $2.3\times10^{-5}$ |
-| Anime-DCGAN | exact mirror / 90° rotation by kernel and layout permutation | unchanged | $1.3\times10^{-6}$ / $1.5\times10^{-6}$ |
+| Recycle-Bot | fold 5 BatchNorms; collapse the linear–Dropout–linear head | 741,121 → 151,809 (−80%) | 2.9 × 10⁻⁶ |
+| MobileNetV2 | fold all 52 BatchNorms | 3,538,984 → 3,487,816 | 5.5 × 10⁻⁵ (logits) |
+| MobileNetV2 | fold uint8 preprocessing (x/127.5 − 1) into Conv1, with padding value 127.5 | unchanged | 2.5 × 10⁻⁵ |
+| MobileNetV2 | fold an RGB → BGR swap into Conv1 | unchanged | 2.3 × 10⁻⁵ |
+| Anime-DCGAN | exact mirror / 90° rotation by kernel and layout permutation | unchanged | 1.3 × 10⁻⁶ / 1.5 × 10⁻⁶ |
 
 **The padding constant.** Folding the preprocessing into Conv1 is exact in the interior and wrong at the border (logit error 1.6), because zero padding in $[-1,1]$ space is 127.5 in raw pixel space. Once the padding value is part of the patch, the fold is exact. On raw uint8 input, agreement with the correctly preprocessed model rises from 0% to 100%; for BGR input it rises from 70% to 100%.
 

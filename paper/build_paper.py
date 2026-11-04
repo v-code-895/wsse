@@ -47,6 +47,7 @@ a { color: var(--link); text-decoration: none; }
 mjx-container[display="true"] { margin: 2mm 0 !important; }
 mjx-container { font-size: 96% !important; }
 #refs + ol, .refs p { font-size: 9.2pt; }
+@media print { body { padding: 0; } main > :last-child { margin-bottom: 0; } }
 """
 
 def front_matter(md):

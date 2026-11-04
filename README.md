@@ -132,7 +132,6 @@ location).
 
 ## Citation and authorship
 
-Archived on Zenodo: [doi:10.5281/zenodo.23956114](https://doi.org/10.5281/zenodo.23956114) (all versions; v1.0.0 is
-[doi:10.5281/zenodo.23956115](https://doi.org/10.5281/zenodo.23956115)). See [`CITATION.cff`](CITATION.cff). Authors: **Voravee Upatising** and **Claude** (Anthropic,
+Archived on Zenodo: [doi:10.5281/zenodo.23956114](https://doi.org/10.5281/zenodo.23956114) (resolves to the latest version). See [`CITATION.cff`](CITATION.cff). Authors: **Voravee Upatising** and **Claude** (Anthropic,
 Claude Opus 5.5). The paper's contribution statement says who did what; Voravee Upatising directed
 the work and is responsible for its content.

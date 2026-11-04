@@ -7,7 +7,7 @@ abstract: >-
   tests in context and merge-checks under git; demonstrated on 2017-2020 Keras checkpoints and on
   two models trained in 2026 (TinySR-26, CatGAN-26).
 type: software
-version: "1.0.0"
+version: "1.0.1"
 date-released: "2026-11-04"
 license: MIT
 doi: 10.5281/zenodo.23956114

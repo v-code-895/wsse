@@ -3,7 +3,7 @@ title: "Weight-Space Software Engineering: Version Control and Unit-Tested Patch
 author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
-date: November 4, 2026 (version 1.0)
+date: November 4, 2026 (version 1.0.1)
 site: https://v-code-895.github.io/wsse/
 code: https://github.com/v-code-895/wsse
 doi: 10.5281/zenodo.23956114
@@ -76,6 +76,16 @@ Because patches are text, git handles branching, merging, reverting and history 
 - Language models editing weights directly is introduced in [1].
 
 Our contribution is not a new editing method but the engineering layer around edits: a declarative text format, in-context tests, dependency ordering, semantic merge checks and rebasing. We treat the edits above as patch types and ask what their tests catch.
+
+**Version control for models.** Raffel [25] argued that models should be developed like open-source software, improved continually by many contributors through merging and versioning. Git-Theta [24] puts that into practice: a git extension that tracks parameter-level changes to checkpoints, stores updates efficiently and merges models automatically. WSSE shares the premise and differs in what a change is and how it is checked:
+- **Changes:** WSSE stores an edit as a few readable parameters of a high-level operator (a direction, a target, a 3×3 colour map), not as a parameter diff.
+- **Checks:** each edit carries executable tests, run in the context of every other edit; pairs of edits are checked for semantic conflicts, which no textual merge detects; and a repository can be rebased onto an updated checkpoint with stale-patch detection.
+
+The two approaches are complementary: Git-Theta handles efficient storage and merging of weights, and WSSE handles the specification and testing of edits.
+
+**Testing models.** Behavioural testing with CheckList [26] made capability-level unit tests standard practice for language models, and Sculley et al. [27] described how machine-learning systems accumulate technical debt that ordinary software practice must manage. WSSE's tests are behavioural tests attached to individual edits and evaluated in context, so a failing test points at the change that broke it.
+
+**Weights as data.** A growing literature treats trained weights as a data modality to be represented, generated and edited [28], and argues that checkpoints should be first-class objects [29]. WSSE contributes engineering infrastructure for that view: identity (content hashes), history (git) and specifications (tests).
 
 **Comparing and combining networks.** We use linear CKA [11] and model stitching [12, 13]. Unlike stitching studies that insert a trained adapter at run time, we fold the fitted 1×1 map into the receiving convolution, so the hybrid has no extra layers. Merging independently trained networks requires aligning their units first [14]. Closed-form classifier heads ("imprinting") [15] give us a cheap way to add a test oracle to a public model.
 
@@ -540,9 +550,21 @@ Weight edits can be managed like code. Stored as hash-pinned, self-testing text 
 
 [23] B. Lim, S. Son, H. Kim, S. Nah, K. M. Lee. Enhanced Deep Residual Networks for Single Image Super-Resolution. CVPR Workshops 2017.
 
+[24] N. Kandpal, B. Lester, M. Muqeeth, A. Mascarenhas, M. Evans, V. Baskaran, T. Huang, H. Liu, C. Raffel. Git-Theta: A Git Extension for Collaborative Development of Machine Learning Models. ICML 2023, PMLR 202:15708–15719.
+
+[25] C. Raffel. Building Machine Learning Models Like Open Source Software. Communications of the ACM 66(2):38–40, 2023.
+
+[26] M. T. Ribeiro, T. Wu, C. Guestrin, S. Singh. Beyond Accuracy: Behavioral Testing of NLP Models with CheckList. ACL 2020, pp. 4902–4912.
+
+[27] D. Sculley, G. Holt, D. Golovin, E. Davydov, T. Phillips, D. Ebner, V. Chaudhary, M. Young, J.-F. Crespo, D. Dennison. Hidden Technical Debt in Machine Learning Systems. NeurIPS 2015, pp. 2503–2511.
+
+[28] X. Han, Z. Wang, B. Zhao, B. Zhang, J. Li, D. Borth, R. Yu, H. Maron, Y. Ye, L. Yin, F. Neri. A Survey of Weight Space Learning: Understanding, Representation, and Generation. arXiv:2603.10090, 2026.
+
+[29] Z. Wang, K. Wang, P. Wang. Position: Weight Space Should Be a First-Class Generative AI Modality. ICML 2026.
+
 ## Appendix A: Reproducing the results
 
-Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (v1.0.0: https://doi.org/10.5281/zenodo.23956115). The code is MIT-licensed; model weights and figures are CC BY-NC 4.0 because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, e.g. `python src/exp3_anime_weightpatch.py`.
+Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (all versions). The code is MIT-licensed; model weights and figures are CC BY-NC 4.0 because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, e.g. `python src/exp3_anime_weightpatch.py`.
 
 **Environment.**
 - CPU experiments (§7 and the anime generator) use Python 3.9.12, NumPy 1.22.4, Pillow 9.0.1, h5py 3.6.0 and scikit-image 0.19.2. Pillow is pinned because it draws the synthetic sprite tests.

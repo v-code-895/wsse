@@ -3,7 +3,7 @@ title: "Weight-Space Software Engineering: Version Control and Unit-Tested Patch
 author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
-date: November 4, 2026 (version 1.0.1)
+date: November 4, 2026 (version 1.0.2)
 site: https://v-code-895.github.io/wsse/
 code: https://github.com/v-code-895/wsse
 doi: 10.5281/zenodo.23956114
@@ -14,19 +14,24 @@ image: figures/fig1_cat_repository.png
 
 ## Abstract
 
-Language models can now read neural network weights and write edits to them directly [1]. Once edits are cheap, a model will accumulate many of them, from many authors. That raises the questions software engineering answers for code: how changes are recorded, tested, merged and kept working when what they were built on changes. We store each weight edit as a small, hash-pinned text patch that carries its own tests (`.weightpatch.json`) and manage patches with ordinary git plus `wpgit`. `wpgit` builds a model from patches, tests every patch in the context of all the others, finds pairs of patches whose order matters, and rebases a repository onto an updated checkpoint.
+Language models can now read neural network weights and write edits to them directly [1]. Once edits are cheap, a model will accumulate many of them, from many authors, human and automated. That raises the questions software engineering answers for code: how changes are specified, tested against regressions, merged across branches and kept working when what they were built on changes.
 
-Our main case study is CatGAN-26, an 8.1M-parameter cat-face generator we trained for this paper. A 15-commit git history edits it with readable patches: blue irises from an exact gated circuit wired into two freed channels, rank-2 latent locks on fur lightness and background, and two latent shifts.
-- **The workflow holds up.** Feature branches merge, and `git revert` reproduces a direct build bit for bit.
-- **Two failure modes appear that only the new tools see.** An in-context test catches two shifts that pass alone but fail together, and `wpgit check` catches two conflicts that git merges silently.
-- **Fixing the patch, not the test.** In the repository's tests, one-direction latent locks leave 68–71% of an attribute's variance, against a bound of 30%. Clamping a rank-2 active subspace leaves 10–11%, and the final build passes every test.
+We introduce Weight-Space Software Engineering (WSSE) and study it in a human-directed loop with an AI coding agent (Claude Opus 5.5).
+- **Proposing edits.** The agent inspects checkpoints and writes the scripts that fit classical algebraic operators (latent clamps, channel regressions, output folds). Each edit becomes a small, hash-pinned text patch that carries its own tests (`.weightpatch.json`).
+- **Accepting them.** Ordinary git plus `wpgit` gate every patch. `wpgit` builds a model from patches, tests each patch in the context of all the others, finds pairs of patches whose order matters, and rebases a repository onto an updated checkpoint.
 
-Three further studies probe the limits:
-- **An updated base model.** After CatGAN-26 is trained 4,000 more steps, its latent patches survive a rebase. Its channel-level patches lose their guarantees, and `wpgit rebase` flags them as stale before any test fails.
-- **Fine-tunes as patches.** Two fine-tunes of a super-resolution model merge as weight deltas in either order. They break a regression test, though, and no weight-space resolution meets the merge's specification.
-- **Old checkpoints as legacy code.** Applied to the first author's 2017–2020 Keras models, the same tools read training history from weights alone, compile refactors exactly and reject a plausible hotfix with a regression gate.
+The main case study is CatGAN-26, an 8.1M-parameter cat-face generator trained for this paper. A 15-commit git history edits it with blue irises from an exact gated circuit wired into two freed channels, rank-2 latent locks, and two latent shifts.
+- **The workflow holds up.** Feature branches merge, and `git revert` reproduces a direct build bit for bit. An in-context test catches two shifts that pass alone but fail together, and `wpgit check` catches two conflicts that git merges silently.
+- **The gates reject plausible proposals.**
+  - a heuristic hotfix to a 2018 super-sampler that lost 3.50 dB;
+  - all four exact output folds offered as its replacement;
+  - one-direction latent locks that leave 68–71% of an attribute's variance against a bound of 30%;
+  - an iris-threshold rule that failed on held-out cats (hue 59°, against a 200–250° target);
+  - all 29 attempts to resolve a fine-tune merge conflict short of retraining.
+- **Fix the patch, not the bound.** Rank-2 active-subspace locks leave 10–11% of the variance, and the repository passes every test at HEAD.
+- **An updated base model.** After CatGAN-26 trains 4,000 more steps, its latent patches survive a rebase while its channel-level patches lose their guarantees. `wpgit rebase` flags those as stale after 500 steps, before any test fails. Re-running the fitting scripts regenerates the repository in 11 minutes with no manual changes. That restores each patch's guarantees but exposes a new interaction that only an in-context test catches.
 
-Code, patches, git histories and models are released at https://github.com/v-code-895/wsse and archived at https://doi.org/10.5281/zenodo.23956114.
+The same tools also treat the first author's 2017–2020 Keras checkpoints and MobileNetV2 as legacy code: they read training history from weights alone and compile refactors exactly. Code, patches, git histories and models are released at https://github.com/v-code-895/wsse and archived at https://doi.org/10.5281/zenodo.23956114.
 
 ## 1. Introduction
 
@@ -49,6 +54,18 @@ Because patches are text, git handles branching, merging, reverting and history 
 - **`check`** finds pairs of patches whose order changes the model;
 - **`rebase`** moves a repository onto an updated checkpoint and marks patches whose assumptions no longer hold.
 
+**How patches are written: tools, not token-space guessing.** Should an edit be produced by a language model predicting raw floating-point values, by a trained hypernetwork, or by code? Here every patch is computed by classical linear algebra:
+- ridge regression and active subspaces;
+- Gram–Schmidt orthogonalisation;
+- 1×1 channel regression;
+- exact BatchNorm folding.
+
+An AI coding agent (Claude Opus 5.5) wrote and ran those scripts under the first author's direction; we do not ask a model to compute a regression in its context window. We think compiled algebraic operators are the right unit for weight-space engineering, much as a coding agent writes source code rather than editing a compiled binary. They have two advantages:
+- **Readability.** An operator reduces thousands of weight deltas to a few readable parameters, such as a 3×3 colour matrix and offset, or a pair of latent directions and their targets.
+- **Separation.** It separates *proposing* a change, where an agent writes a fitting script, from *accepting* it, where `wpgit` checks base hashes, commutation and in-context behavioural bounds.
+
+§8.2 follows each proposal in this study to what the checks made of it.
+
 ![Figure 1](figures/fig1_cat_repository.png)
 
 *Figure 1. CatGAN-26, our 8.1M-parameter cat generator, under version control. The same six random latents (not selected) go through successive builds of the repository of §4: the base model; the blue-eye circuit (`prune2`, `eye_gate`); a rank-2 lock that fixes fur lightness; and HEAD, which adds a background lock and passes every test. The circuit turns irises blue where it fires (column 5) but works on only part of the cats, and on dark tabby stripes it leaks blue (columns 2 and 4): §4.2 quantifies both. Images are upscaled 4× by TinySR-26 (§6).*
@@ -65,17 +82,28 @@ Because patches are text, git handles branching, merging, reverting and history 
 **Contributions.**
 - The `.weightpatch.json` format and `wpgit`, including in-context tests, the semantic merge check and a rebase that detects stale patches.
 - Two patch techniques: **subspace locks**, which clamp an active subspace of the latent to freeze attributes the latent encodes nonlinearly, and **gated circuit wiring**, which frees channels by regression and installs an exact ReLU gate in them.
-- Case studies on two models trained for this paper (CatGAN-26, TinySR-26) and on seven older checkpoints.
+- A record of a human-directed agent loop under these gates: what was proposed, what the checks caught and how each was resolved (§8.2).
+- Case studies on two models trained for this paper (CatGAN-26, TinySR-26), and on six of the first author's 2017–2020 checkpoints and MobileNetV2.
 - A release of all code, patches, git histories, test results and model weights.
 
 ## 2. Related work
 
-**Weight editing.**
-- Targeted edits to trained networks include rank-one factual editing in language models (ROME) [2], latent-direction steering in GANs [6, 7], and rewriting a GAN's rules by editing a layer's weights [9]. GAN dissection [8] identifies units with semantic roles.
-- Task arithmetic adds and subtracts fine-tuning deltas [3]. Model soups average fine-tuned weights [4], and TIES-merging resolves sign and magnitude interference between deltas [5].
-- Language models editing weights directly is introduced in [1].
+**Weight editing and model merging.** Existing ways to modify trained weights without full retraining fall into four families:
+- *Learned editors.* MEND [30] trains auxiliary networks that turn a low-rank decomposition of the fine-tuning gradient into a fast weight update. Text-to-LoRA [34] generates low-rank adapters for a language model directly from a task description.
+- *Locate-then-edit and lifelong editing.*
+  - ROME [2] and MEMIT [31] make closed-form updates to factual associations in one or several layers of a language model.
+  - GRACE [32] (a discrete key-value codebook) and AlphaEdit [33] (which projects each update onto the null space of preserved knowledge) address interference across sequences of edits.
+  - In generative image models, GANSpace [6] and InterFaceGAN [7] steer latent directions, GAN dissection [8] identifies units with semantic roles, and Bau et al. [9] rewrite a generator's rules by editing a layer's weights.
+- *Task arithmetic and merging.* Task arithmetic [3] adds and subtracts fine-tuning deltas, model soups [4] average fine-tuned weights, and TIES-merging [5] resolves sign and magnitude interference between deltas.
+- *Direct weight-space programming.* Takehi et al. [1] showed that language models can read weight tensors and write gradient-free edits.
 
-Our contribution is not a new editing method but the engineering layer around edits: a declarative text format, in-context tests, dependency ordering, semantic merge checks and rebasing. We treat the edits above as patch types and ask what their tests catch.
+**Where WSSE differs.** Each of our operators is classical linear algebra related to the methods above. For example, the Type I conflict resolution of §3 projects onto an orthogonal complement, in the same spirit as AlphaEdit's null-space projection. What none of these methods provides is a software-engineering lifecycle around heterogeneous edits:
+- one hash-pinned text format for subspace locks, gated channel circuits, output folds and fine-tune deltas alike;
+- tests for every edit, run against every other edit;
+- a pairwise check for order dependence;
+- rebasing across upstream model updates.
+
+In WSSE, an edit made by any of these methods would be one more patch type, and the question is what its tests catch in context.
 
 **Version control for models.** Raffel [25] argued that models should be developed like open-source software, improved continually by many contributors through merging and versioning. Git-Theta [24] puts that into practice: a git extension that tracks parameter-level changes to checkpoints, stores updates efficiently and merges models automatically. WSSE shares the premise and differs in what a change is and how it is checked:
 - **Changes:** WSSE stores an edit as a few readable parameters of a high-level operator (a direction, a target, a 3×3 colour map), not as a parameter diff.
@@ -453,7 +481,29 @@ Across the studies, git never reported a problem, and the merges were always cle
 | a fine-tune merge that breaks a regression guard, with no weight-space fix | §6 | regression test |
 | a hotfix that costs 3.5 dB | §7.2 | regression gate |
 
-### 8.2 Lessons for weight-space tooling
+### 8.2 The human–agent loop, proposal by proposal
+
+Each operator in §3 is linear algebra that a skilled engineer could write by hand. The practical bottleneck in maintaining a model through patches is the loop around them:
+1. propose an edit;
+2. find out what it breaks in context;
+3. decide whether to reformulate the patch, resolve a conflict or reject the change.
+
+In this study the first author set the goals and approved the test specifications. An AI coding agent (Claude Opus 5.5) wrote the fitting code, proposed candidate patches and ran `wpgit`; the first, untested scripts in §7.2 predate this workflow. §8.1 lists what the checks caught. The table below follows each proposal to its resolution:
+
+| proposal | what caught it | outcome | resolution |
+|---|---|---|---|
+| hotfix to TinySR-18A: zero the output bias, boost high frequencies 1.18× and 1.25× (§7.2) | regression gate | black lift +8.40 → +3.29 RGB, but −3.50 dB on held-out photos | an ablation showed zeroing the bias alone costs −3.51 dB; rejected |
+| four exact output folds as replacements (§7.2) | regression gate | 0 of 4 pass; the best gains +2.93 dB but raises the black floor 8.90 → 13.51 RGB | a six-point dark-weight sweep shows the tone error is nonlinear; no fold shipped |
+| CatGAN-26 trained with a spectral-normalised discriminator (§4.1) | training diagnostics | the discriminator scored real cats, generated cats, noise and a blank image all at −0.0024 ± 0.00003 within 2,000 steps | no spectral norm: a lazy R1 penalty and He initialisation; trained 30,000 steps |
+| latent shifts orthogonalised against all other attributes (§4.2) | on-target measurement | fur warmth erased (−0.01 SD), because warmth and saturation nearly coincide (cos 0.951) | keep near-duplicates (\|cos\| > 0.9); warmth restored to +1.25 SD |
+| iris-gate threshold set so expected false positives equal iris area (§4.2) | the patch's own test, on held-out cats | irises not blue (hue 59°; target 200–250°) | choose the strictest quantile that passes on fitting images (0.98) |
+| one-direction latent locks on CatGAN-26 (§4.2–4.3) | `wpgit test` at HEAD | variance ratios 0.708 and 0.677 against a bound of 0.3 | bound kept; rank-2 active-subspace locks pass at 0.101 and 0.114 |
+| two fine-tune branches merged as deltas, then 29 resolutions short of retraining: 25 weightings, two layer cherry-picks and their merge, a 1,000-step repair (§6) | the merge's specification test | none passes: each loses a claimed gain or breaks the nearest-input guard | only joint retraining passes (+0.03, +3.19, +0.08 dB) |
+| porting the cat repository to CatGAN-26 trained further, vs regenerating it (§5) | `wpgit rebase`, then `wpgit test` | ported channel patches stale from +500 steps and failing from +2,000; regenerated patches pass alone but the gate stops firing at HEAD (26°) | regeneration works with no manual changes; in-context tests remain necessary |
+
+Every proposal in the table ran without error and looked reasonable when it was written. What stopped each one was a measurement, not a reviewer's intuition. That is the case for the loop: agents write algebraic operators, and reproducible weight-space tests accept or reject them.
+
+### 8.3 Lessons for weight-space tooling
 
 1. **Test in context, always.** Patches that pass alone fail together, and the reverse.
 2. **Prefer patches written against interfaces.** Latent patches survived an upstream update that broke channel-level ones. When a patch must touch internals, it should record what it assumes, so a rebase can detect staleness. `sparse_add` lacked that, and `wpgit rebase` recovers it by comparing old and new weights.
@@ -461,7 +511,7 @@ Across the studies, git never reported a problem, and the merges were always cle
 4. **Prefer reviewable operators.** A 12-number colour fold or a 2-direction lock can be read in full. A dense fine-tune delta can only be reviewed by its tests, and it cannot be partially reverted.
 5. **Treat fitted patches as build products.** Keeping the fitting script with the patch makes regeneration possible. Regeneration then needs its own tests, because new patches create new interactions.
 
-### 8.3 The boundary of gradient-free patching
+### 8.4 The boundary of gradient-free patching
 
 **Inside**, with exact or near-exact results:
 - exact refactors: BatchNorm folding, head collapse, deployment fixes, symmetry, truncation;
@@ -476,7 +526,7 @@ Across the studies, git never reported a problem, and the merges were always cle
 - transfer between checkpoints with no common ancestor (§7.1, §7.4);
 - resolving a behavioural conflict between fine-tunes (§6).
 
-### 8.4 Limitations
+### 8.5 Limitations
 
 - **Scale.** The models span 253K–8.1M parameters. The primitives are dimension-agnostic linear algebra, but running `wpgit check` and in-context suites on billion-parameter language models is future work.
 - **Small and partly synthetic tests.** Generator attributes are pixel heuristics, checked by an ImageNet classifier. CatGAN-26's quality is judged in MobileNetV2 features rather than with Inception-based FID or people. The TinySR-18 gate uses 5 regression and 7 edge-case images.
@@ -484,7 +534,7 @@ Across the studies, git never reported a problem, and the merges were always cle
 - **Patch choices made after failures.** The cat repository's tests reuse the 2018 bounds, but two patch-side choices followed failures: the gate-threshold rule and the subspace locks. Both select on fitting data only, and the earlier versions are reported.
 - **Environment.** The synthetic sprite tests are drawn with Pillow, whose rasteriser changed between versions. All reported numbers come from the pinned release environment (Appendix A).
 
-### 8.5 Outlook
+### 8.6 Outlook
 
 The motivating scenario is automated maintenance: language-model agents proposing weight patches [1]. The workflow here is built for that. The agent proposes, and `wpgit` gates every proposal with tests written by people. Natural next steps:
 - `git bisect run python src/wpgit.py test .` to find a breaking patch in $O(\log N)$ builds;
@@ -561,6 +611,16 @@ Weight edits can be managed like code. Stored as hash-pinned, self-testing text 
 [28] X. Han, Z. Wang, B. Zhao, B. Zhang, J. Li, D. Borth, R. Yu, H. Maron, Y. Ye, L. Yin, F. Neri. A Survey of Weight Space Learning: Understanding, Representation, and Generation. arXiv:2603.10090, 2026.
 
 [29] Z. Wang, K. Wang, P. Wang. Position: Weight Space Should Be a First-Class Generative AI Modality. ICML 2026.
+
+[30] E. Mitchell, C. Lin, A. Bosselut, C. Finn, C. D. Manning. Fast Model Editing at Scale. ICLR 2022.
+
+[31] K. Meng, A. Sen Sharma, A. Andonian, Y. Belinkov, D. Bau. Mass-Editing Memory in a Transformer. ICLR 2023.
+
+[32] T. Hartvigsen, S. Sankaranarayanan, H. Palangi, Y. Kim, M. Ghassemi. Aging with GRACE: Lifelong Model Editing with Discrete Key-Value Adaptors. NeurIPS 2023.
+
+[33] J. Fang, H. Jiang, K. Wang, Y. Ma, J. Shi, X. Wang, X. He, T.-S. Chua. AlphaEdit: Null-Space Constrained Knowledge Editing for Language Models. ICLR 2025.
+
+[34] R. Charakorn, E. Cetin, Y. Tang, R. T. Lange. Text-to-LoRA: Instant Transformer Adaption. ICML 2025, PMLR 267:7485–7514.
 
 ## Appendix A: Reproducing the results
 

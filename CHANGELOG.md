@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.2 — 2026-11-04
+
+- Paper: the abstract and introduction describe how patches are written. An AI coding agent
+  writes the fitting scripts for classical algebraic operators, and `wpgit` accepts or rejects
+  the results.
+- Paper: new §8.2 traces each proposal in the study to the check that caught it and how it was
+  resolved. The old §8.2–8.5 become §8.3–8.6.
+- Paper: related work covers learned editors and lifelong editing (MEND, MEMIT, GRACE,
+  AlphaEdit, Text-to-LoRA) and says where WSSE differs.
+
+Code, results and models are unchanged.
+
 ## v1.0.1 — 2026-11-04
 
 - Paper: related work now covers version control for models (Git-Theta; Raffel, "Building ML

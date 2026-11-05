@@ -1,0 +1,45 @@
+[1] guard parameters on calibration (11.7s): {"guard": {"k": 0.0, "delta_rgb": 1.0, "calib_psnr": 20.815, "calib_black_floor": 4.124, "unguarded_calib_psnr": 20.864, "unguarded_calib_black_floor": 6.93}, "fold+guard": {"k": 0.0, "delta_rgb": 1.0, "calib_psnr": 23.98, "calib_black_floor": 5.266, "unguarded_calib_psnr": 23.393, "unguarded_calib_black_floor": 11.104}, "fold+dark guard": {"delta_rgb": 1.0, "t": 0.2, "K": 2, "calib_psnr": 24.029, "calib_black_floor": 5.669}}
+[2] exactness: {"guard": {"max_err_vs_formula": 2.4437904357910156e-06, "max_violation_of_bound": 2.980232238769531e-07}, "fold+guard": {"max_err_vs_formula": 2.649488693551305e-06, "max_violation_of_bound": 3.5762786865234375e-07}, "fold+dark guard": {"max_err_vs_formula": 3.0523098945023364e-06, "max_violation_of_bound": 7.748603820800781e-07}, "grown_network_without_guard_vs_base": 2.5033950805664062e-06}
+   base_model                     reg 21.75 dB  edge 19.61 dB  black floor 8.90  reference
+   color_fold                     reg 24.68 dB  edge 21.42 dB  black floor 13.51  FAIL (black floor rises)
+   guard                          reg 21.43 dB  edge 19.47 dB  black floor 5.84  FAIL (regression)
+   fold+guard                     reg 25.11 dB  edge 21.63 dB  black floor 7.33  PASS
+   fold+guard (freed channels)    reg 25.20 dB  edge 21.44 dB  black floor 7.11  PASS
+   fold+dark guard                reg 25.12 dB  edge 22.01 dB  black floor 7.88  PASS
+   fold+dark guard (freed channels) reg 25.18 dB  edge 21.80 dB  black floor 7.61  PASS
+   fine-tune 250 steps            reg 24.69 dB  edge 22.03 dB  black floor 1.87  FAIL (regression)
+   fine-tune 500 steps            reg 26.09 dB  edge 22.49 dB  black floor 1.62  PASS
+   fine-tune 750 steps            reg 25.76 dB  edge 22.51 dB  black floor 1.59  PASS
+   fine-tune 1000 steps           reg 24.81 dB  edge 22.35 dB  black floor 1.44  PASS
+   fine-tune 1250 steps           reg 24.79 dB  edge 22.35 dB  black floor 1.45  FAIL (regression)
+   fine-tune 1500 steps           reg 25.26 dB  edge 22.51 dB  black floor 1.52  PASS
+   fine-tune 1750 steps           reg 26.43 dB  edge 22.83 dB  black floor 1.69  PASS
+   fine-tune 2000 steps           reg 26.54 dB  edge 22.96 dB  black floor 1.92  PASS
+   fine-tune 2250 steps           reg 25.28 dB  edge 22.67 dB  black floor 1.74  PASS
+   fine-tune 2500 steps           reg 25.51 dB  edge 22.71 dB  black floor 1.77  PASS
+   fine-tune 2750 steps           reg 26.34 dB  edge 22.96 dB  black floor 1.94  PASS
+   fine-tune 3000 steps           reg 26.85 dB  edge 23.21 dB  black floor 2.19  PASS
+   fine-tune 3250 steps           reg 25.89 dB  edge 23.15 dB  black floor 2.34  PASS
+   fine-tune 3500 steps           reg 25.15 dB  edge 23.02 dB  black floor 2.28  PASS
+   fine-tune 3750 steps           reg 26.68 dB  edge 23.29 dB  black floor 2.53  PASS
+   fine-tune 4000 steps           reg 26.82 dB  edge 23.24 dB  black floor 2.26  PASS
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+done in 587s

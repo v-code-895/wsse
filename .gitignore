@@ -15,6 +15,7 @@ results/exp17_out/catgan26_s*.npz
 results/exp2_out/generator_patched.h5
 results/exp2b_out/generator_*.npz
 results/exp2b_selftest/generator_*.npz
+results/exp23_out/features.npz
 
 # weight repositories are nested git repos: they are shipped as git bundles (weightrepo.bundle)
 results/**/weightrepo/

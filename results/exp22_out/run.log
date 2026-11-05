@@ -1,0 +1,11 @@
+[1] routers fitted in 70.4s: {"input statistics": {"fit_accuracy": 0.8138888888888889, "params": 43, "features": 8}, "self-consistency": {"fit_accuracy": 1.0, "params": 33, "features": 6}}
+[2] bicubic LR: base 32.53, branch: bicubic 32.76, branch: noisy 32.32, union (input statistics) 32.73, union (self-consistency) 32.76, union (oracle) 32.76
+[2] noisy bicubic LR: base 26.89, branch: bicubic 26.42, branch: noisy 30.15, union (input statistics) 29.59, union (self-consistency) 30.15, union (oracle) 30.15
+[2] nearest LR: base 31.12, branch: bicubic 26.24, branch: noisy 30.11, union (input statistics) 30.16, union (self-consistency) 31.12, union (oracle) 31.12
+[3] base                         bicubic LR +0.00  noisy bicubic LR +0.00  nearest LR +0.00  meets spec: False
+[3] branch: bicubic              bicubic LR +0.23  noisy bicubic LR -0.47  nearest LR -4.88  meets spec: False
+[3] branch: noisy                bicubic LR -0.20  noisy bicubic LR +3.26  nearest LR -1.01  meets spec: False
+[3] union (input statistics)     bicubic LR +0.21  noisy bicubic LR +2.69  nearest LR -0.96  meets spec: False
+[3] union (self-consistency)     bicubic LR +0.23  noisy bicubic LR +3.26  nearest LR +0.00  meets spec: True
+[3] union (oracle)               bicubic LR +0.23  noisy bicubic LR +3.26  nearest LR +0.00  meets spec: True
+mux error vs plain selection: 5.960464477539063e-08 | confusion: {'input statistics': [[8, 166, 6], [23, 18, 139], [127, 30, 23]], 'self-consistency': [[0, 180, 0], [0, 0, 180], [180, 0, 0]]}

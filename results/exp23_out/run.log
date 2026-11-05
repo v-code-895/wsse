@@ -1,0 +1,11 @@
+[*] ('fit', 'cat'): 600 images (109s)
+[*] ('val', 'cat'): 500 images (199s)
+[*] ('fit', 'dog'): 600 images (310s)
+[*] ('val', 'dog'): 500 images (401s)
+[*] ('fit', 'wild'): 600 images (509s)
+[*] ('val', 'wild'): 500 images (598s)
+[1] base: {"fit": {"cat_acc": 0.925, "dog_acc": 0.97, "wild_called_cat": 0.0}, "val": {"cat_acc": 0.954, "dog_acc": 0.954, "wild_called_cat": 0.0}}
+[2] base: {"cat_acc": 0.954, "cat_errors_fixed": "0/23", "cat_correct_broken": 0, "dog_top1_changed": 0, "dog_called_cat": 0, "dog_kl_vs_base": 0.0, "dog_max_logit_change": 0.0, "wild_top1_changed": 0, "wild_called_cat": 0, "wild_kl_vs_base": 0.0, "wild_max_logit_change": 0.0, "unit_fired": {"cat": 0, "dog": 0, "wild": 0}, "max_logit_change_where_unit_off": 0.0}
+[2] exception unit: {"cat_acc": 0.998, "cat_errors_fixed": "22/23", "cat_correct_broken": 0, "dog_top1_changed": 0, "dog_called_cat": 0, "dog_kl_vs_base": 9.096982923655021e-05, "dog_max_logit_change": 2.3535165165878382, "wild_top1_changed": 1, "wild_called_cat": 1, "wild_kl_vs_base": 0.00038895251212072926, "wild_max_logit_change": 1.1290631061042662, "unit_fired": {"cat": 499, "dog": 73, "wild": 33}, "max_logit_change_where_unit_off": 0.0, "seconds": 0.35324573516845703}
+[2] head fine-tune, with preservation: {"cat_acc": 0.998, "cat_errors_fixed": "22/23", "cat_correct_broken": 0, "dog_top1_changed": 2, "dog_called_cat": 0, "dog_kl_vs_base": 0.0007415809005210305, "dog_max_logit_change": 2.506761039652928, "wild_top1_changed": 2, "wild_called_cat": 1, "wild_kl_vs_base": 0.0016552080325021974, "wild_max_logit_change": 2.1754188045683915, "seconds": 3.039865732192993}
+[2] head fine-tune, errors only: {"cat_acc": 1.0, "cat_errors_fixed": "23/23", "cat_correct_broken": 0, "dog_top1_changed": 377, "dog_called_cat": 375, "dog_kl_vs_base": 2.2711635214028876, "dog_max_logit_change": 7.950238364999124, "wild_top1_changed": 338, "wild_called_cat": 336, "wild_kl_vs_base": 2.236982006866576, "wild_max_logit_change": 7.365808747342982, "seconds": 1.883918285369873}

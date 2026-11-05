@@ -1,555 +1,574 @@
 ---
-title: "Weight-Space Software Engineering: Version Control and Unit-Tested Patches for Neural Network Weights"
+title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
 author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
-date: November 4, 2026 (version 1.0.2)
+date: November 5, 2026 (version 2.0.0)
 site: https://v-code-895.github.io/wsse/
 code: https://github.com/v-code-895/wsse
 doi: 10.5281/zenodo.23956114
-image: figures/fig1_cat_repository.png
+image: figures/fig_odd_eyes.png
 ---
 
 <!-- Every number traces to a file under results/ (Appendix A). Maths is LaTeX: `python paper/build_paper.py` builds wsse.html and wsse.pdf. -->
 
 ## Abstract
 
-Language models can now read neural network weights and write edits to them directly [1]. Once edits are cheap, a model will accumulate many of them, from many authors, human and automated. That raises the questions software engineering answers for code: how changes are specified, tested against regressions, merged across branches and kept working when what they were built on changes.
+Gradient descent changes the values of a network's weights, inside an architecture fixed before training, toward good behaviour on the data it sees. It cannot add a unit or a connection, and what it learns holds only approximately, and only near that data. We show that a trained network can instead be *rewired* after training, and that an LLM coding agent can do the rewiring. Directed by a person, the agent (Claude Opus 5.5) writes patches for small trained models out of exact identities of the activations those models already use. With LeakyReLU or ReLU:
+- two channels carry any signal through a layer unchanged, or compute an exact ReLU;
+- four compute a minimum, a clamp or an OR;
+- six compute a multiplexer.
 
-We introduce Weight-Space Software Engineering (WSSE) and study it in a human-directed loop with an AI coding agent (Claude Opus 5.5).
-- **Proposing edits.** The agent inspects checkpoints and writes the scripts that fit classical algebraic operators (latent clamps, channel regressions, output folds). Each edit becomes a small, hash-pinned text patch that carries its own tests (`.weightpatch.json`).
-- **Accepting them.** Ordinary git plus `wpgit` gate every patch. `wpgit` builds a model from patches, tests each patch in the context of all the others, finds pairs of patches whose order matters, and rebases a repository onto an updated checkpoint.
+The agent makes room for these circuits in one of two ways. It can regress existing channels onto the rest of their layer and fold the regression into the next layer. Or it can add channels whose outgoing weights are zero, which changes nothing.
 
-The main case study is CatGAN-26, an 8.1M-parameter cat-face generator trained for this paper. A 15-commit git history edits it with blue irises from an exact gated circuit wired into two freed channels, rank-2 latent locks, and two latent shifts.
-- **The workflow holds up.** Feature branches merge, and `git revert` reproduces a direct build bit for bit. An in-context test catches two shifts that pass alone but fail together, and `wpgit check` catches two conflicts that git merges silently.
-- **The gates reject plausible proposals.**
-  - a heuristic hotfix to a 2018 super-sampler that lost 3.50 dB;
-  - all four exact output folds offered as its replacement;
-  - one-direction latent locks that leave 68–71% of an attribute's variance against a bound of 30%;
-  - an iris-threshold rule that failed on held-out cats (hue 59°, against a 200–250° target);
-  - all 29 attempts to resolve a fine-tune merge conflict short of retraining.
-- **Fix the patch, not the bound.** Rank-2 active-subspace locks leave 10–11% of the variance, and the repository passes every test at HEAD.
-- **An updated base model.** After CatGAN-26 trains 4,000 more steps, its latent patches survive a rebase while its channel-level patches lose their guarantees. `wpgit rebase` flags those as stale after 500 steps, before any test fails. Re-running the fitting scripts regenerates the repository in 11 minutes with no manual changes. That restores each patch's guarantees but exposes a new interaction that only an in-context test catches.
+On four small models, the agent's patches do things that training the model does not:
+- **Logic in a GAN.** A coordinate wire and an AND gate compiled into an 8.1M-parameter cat generator give odd-eyed cats. 42% of left irises turn blue and no right iris changes. The right half of every image moves by at most 1.6×10⁻⁷ (float64).
+- **A repair with a bound.** A 2018 super-sampler lifts black, and no output-layer patch could fix it. With a reference path and a min-gate it passes its regression gate (+3.4 dB). On any input, wherever the input is black around a pixel, the output there is provably at most 1/255.
+- **Growing instead of averaging.** No weighted merge, cherry-pick or repair could combine two particular fine-tunes. Placed side by side behind a self-checking router, they keep each branch's whole gain (+0.23, +3.26, +0.00 dB): the router picks the right network for all 540 test images. That beats joint retraining (+0.03, +3.19, +0.08 dB), at three times the parameters.
+- **An exception in a classifier.** One gated unit beside MobileNetV2's classifier fixes 22 of 23 misclassified cats and changes 1 of 1,000 dog and wild-animal predictions. Wherever it does not fire, the logits are exactly the original's. A quick fine-tune on the same errors turns 711 of those animals into cats.
 
-The same tools also treat the first author's 2017–2020 Keras checkpoints and MobileNetV2 as legacy code: they read training history from weights alone and compile refactors exactly. Code, patches, git histories and models are released at https://github.com/v-code-895/wsse and archived at https://doi.org/10.5281/zenodo.23956114.
+Each patch is fitted in seconds to minutes, without gradients. Patches are text files that carry their own tests, and a small tool, `wpgit`, does three things with them:
+- tests each patch in the context of the others;
+- finds pairs of patches whose order matters;
+- rebases patches onto updated models.
+
+On a 15-commit history of the cat generator, those checks catch failures that each patch's own tests miss. Patching does not replace training: with data in hand, a short fine-tune beats the repair above on every metric, but bounds nothing. It adds a layer on top of training, in which a trained model is a starting point that can be extended, constrained, combined and fixed. Code, patches and models are at https://github.com/v-code-895/wsse, archived at https://doi.org/10.5281/zenodo.23956114.
 
 ## 1. Introduction
 
-A trained checkpoint is usually treated as an immutable binary: the end product of data and gradient descent. When it needs to change, the remedy is to change the data or the loss and train again. That is starting to change. Takehi et al. [1] showed that frontier language models can read weight tensors and write gradient-free edits to them. If editing weights becomes as cheap as editing code, models will collect edits the way codebases collect commits, from several authors, human and automated, over time.
+A trained checkpoint is usually treated as a sealed artefact. When it misbehaves, the remedy is more data, a different loss or another training run: gradient descent is the only tool that writes the weights. That tool has fixed limits.
+- It moves the values of existing parameters, inside an architecture chosen before training. It never adds a unit, a connection or a branch.
+- Every step moves every output a little.
+- What it learns holds approximately, on inputs like its training data. It says nothing about other inputs.
 
-Software has been here before. Hotfixes applied straight to production binaries cause silent regressions, collide with each other and break when the code beneath them changes. The answer was a discipline, not a better hotfix: changes are diffs, diffs are reviewed and tested, and version control merges them and keeps their history. **This paper asks whether that discipline transfers to weights, and what breaks when it does.**
+Takehi et al. [1] showed that frontier language models can read weight tensors and write edits to them without gradients. We take the next step on small models. An LLM coding agent, directed by a person, edits not only a trained network's weights but its *topology*. It adds channels and layers, carries signals around the learned computation, and installs exact logic, guards and switches, all built from the layer types the network already has. Patches like these can do things training cannot:
+- add a behaviour for which there is no training data (a generator that has never seen an odd-eyed cat draws one);
+- keep a stated part of the function exactly unchanged (one half of every image; every input on which an exception does not fire);
+- bound the output on every input, not only on test data;
+- route between networks, so that specialisations which compete inside one fixed architecture stop competing.
 
-**The idea.** We store each weight edit as a text file, a *weight patch*, that names the exact checkpoint it targets by content hash, declares the patches it depends on, describes its edit with a few compact parameters, and carries quantitative tests:
+**The instruction set.** The trick that makes this possible is old and small. A LeakyReLU with slope $\alpha$ satisfies
+$$\text{LReLU}(u) - \text{LReLU}(-u) = (1+\alpha)\,u, \qquad \text{LReLU}(u) + \alpha\,\text{LReLU}(-u) = (1-\alpha^2)\,\text{ReLU}(u).$$
+Two channels driven with opposite signs therefore carry any signal through a nonlinear layer unchanged, or turn it into an exact ReLU. Min, max, clamps, thresholds, AND, OR and a multiplexer follow, each a few channels wide (§3.1).
 
-```json
-{"id": "lock_fur_lightness", "base": "be2b16ff52fc4021",
- "ops":   [{"type": "latent_clamp", "layer": "dense", "direction": [-0.0326, 0.0344, ...], "target": 2.0},
-           {"type": "latent_clamp", "layer": "dense", "direction": [-0.0062, 0.0191, ...], "target": 0.0}],
- "tests": [{"type": "attr_var_ratio", "attr": "fur_lightness", "vs": "base", "max": 0.3}]}
-```
+What remains is room, since a trained layer has no idle channels. The agent makes room in one of two ways (§3.2):
+- **Freeing** channels: it regresses them onto the rest of their layer and folds the regression into the next layer.
+- **Growing** the layer: it adds channels whose outgoing weights are zero, which changes nothing at all.
 
-Because patches are text, git handles branching, merging, reverting and history unchanged. A small tool, `wpgit`, adds what git cannot know about weights (§3):
-- **`build`** applies the patches in dependency order;
-- **`test`** runs each patch's tests in the context of all the others;
-- **`check`** finds pairs of patches whose order changes the model;
-- **`rebase`** moves a repository onto an updated checkpoint and marks patches whose assumptions no longer hold.
+![Figure 1](figures/fig_odd_eyes.png)
 
-**How patches are written: tools, not token-space guessing.** Should an edit be produced by a language model predicting raw floating-point values, by a trained hypernetwork, or by code? Here every patch is computed by classical linear algebra:
-- ridge regression and active subspaces;
-- Gram–Schmidt orthogonalisation;
-- 1×1 channel regression;
-- exact BatchNorm folding.
+*Figure 1. Odd-eyed cats from a GAN never trained on any. Rows: the base CatGAN-26; a patch that turns only the left iris blue; the same patch with its logic inverted (right iris); both irises. A coordinate wire, grown through ten layers, tells the iris gate which half of the image it is in (§4.2). The left-eye patch cannot touch the right half of any image: there it changes pixels by at most 1.6×10⁻⁷ (float64). As with the 2018 circuit it extends, the gate fires fully on some cats (columns 5–6) and partly on others, with blue streaks on striped fur (columns 1, 3, 4). Same six latents in every row; columns chosen from those where the left-eye patch changes the left eye.*
 
-An AI coding agent (Claude Opus 5.5) wrote and ran those scripts under the first author's direction; we do not ask a model to compute a regression in its context window. We think compiled algebraic operators are the right unit for weight-space engineering, much as a coding agent writes source code rather than editing a compiled binary. They have two advantages:
-- **Readability.** An operator reduces thousands of weight deltas to a few readable parameters, such as a 3×3 colour matrix and offset, or a pair of latent directions and their targets.
-- **Separation.** It separates *proposing* a change, where an agent writes a fitting script, from *accepting* it, where `wpgit` checks base hashes, commutation and in-context behavioural bounds.
+**Who writes the patches, and what we built around the agent.** Every patch in §4 was designed and compiled by an LLM coding agent (Claude Opus 5.5, working in Claude Code), on small models, with a person in the loop:
+- **The person** states the goal and its specification, for example "one blue eye, nothing else changes", or "lower the black floor without losing 0.1 dB anywhere".
+- **The agent** reads the architecture and the weights through scripts, and chooses identities and where to make room. It writes the code that compiles and fits the patch, runs the tests and looks at the images.
+- **The tests decide.** A failing test goes back to the agent, which changes the patch, not the bound (§7.2).
 
-§8.2 follows each proposal in this study to what the checks made of it.
+Around the agent we built four things:
+- an instruction set of identities, with exactness tests (§3.1);
+- two ways to make room, with their costs measured (§3.2);
+- a patch format in which every edit is a hash-pinned text file that carries its own tests (§3.3);
+- `wpgit`, which tests each patch in the context of all the others, finds pairs whose order matters and rebases patches onto updated models (§3.3, §5).
 
-![Figure 1](figures/fig1_cat_repository.png)
+The patches are small. Most of their numbers are wiring constants the agent writes by hand. The rest, such as an iris detector or a 12-number colour map, are fitted in closed form from hundreds to a few thousand examples, in seconds to minutes (Table 3).
 
-*Figure 1. CatGAN-26, our 8.1M-parameter cat generator, under version control. The same six random latents (not selected) go through successive builds of the repository of §4: the base model; the blue-eye circuit (`prune2`, `eye_gate`); a rank-2 lock that fixes fur lightness; and HEAD, which adds a background lock and passes every test. The circuit turns irises blue where it fires (column 5) but works on only part of the cats, and on dark tabby stripes it leaks blue (columns 2 and 4): §4.2 quantifies both. Images are upscaled 4× by TinySR-26 (§6).*
+**What we found.**
+1. **Exact logic compiles into a trained GAN** (§4.2). A coordinate wire and an AND gate turn one iris blue and leave the other half of the image unchanged to float precision. Growing the room costs 0.5% more parameters and nothing in fidelity. Freeing it instead raises the mean change outside the eyes from 0.24 to 3.97 RGB levels.
+2. **A rewired network repairs what output-layer edits could not, with a bound on every input** (§4.3). TinySR-18A's black lift resisted every output fold; a reference path and a min-gate pass its gate. A short fine-tune on the same images scores better and bounds nothing.
+3. **Growing beats averaging for fine-tunes that compete** (§4.4). Side by side behind a self-checking router, two branches keep their whole gains, where weighted merges and joint retraining trade them off.
+4. **An exception fixes a classifier locally** (§4.5). It fixes 22 of 23 errors and changes 1 of 1,000 other predictions, against 711 for a quick fine-tune.
+5. **Patches need engineering to coexist** (§5). In a 15-commit history of the cat generator, git merges silently what the weights cannot hold together:
+   - a patch that passes alone fails once merged;
+   - two semantic conflicts merge without a textual conflict;
+   - patches written against hidden channels go stale when the model trains further.
 
-**What we found.** We built the tooling and used it on real models, chiefly a cat-face generator trained for this paper (Figure 1). Each finding is a lesson that software engineering already knows, made concrete for weights:
-
-1. **Patches compose under git, and tests must run in context** (§4.3). Three feature branches merge cleanly, and a revert reproduces a direct build bit for bit. One patch passes its tests alone and fails them once merged, and only an in-context test sees it.
-2. **Git merges what the weights cannot** (§4.3). Two lock branches merge without a textual conflict, yet the order in which they apply changes the model. A second pair contradicts each other's intent. `wpgit check` flags both, and each needs a different kind of resolution.
-3. **Fix the patch, not the test** (§4.2–4.3). One-direction latent locks fail their tests on CatGAN-26. A rank-2 *subspace lock* passes them, and the repository goes green with the original bounds.
-4. **Patches go stale when the model underneath changes** (§5). Patches written against the model's input survive 4,000 more training steps. Patches written against specific hidden channels do not, and a rebase flags them before any test fails.
-5. **Fine-tunes merge trivially and compose badly** (§6). Delta patches commute exactly and still break a regression test, and no weight-space resolution we tried meets the merge's specification.
-6. **Old checkpoints behave like legacy code** (§7). On the first author's 2017–2020 Keras models, weights alone reveal training history, refactors compile exactly, and a regression gate rejects a plausible hotfix that the original, untested script would have shipped.
+   In-context tests catch all of it.
 
 **Contributions.**
-- The `.weightpatch.json` format and `wpgit`, including in-context tests, the semantic merge check and a rebase that detects stale patches.
-- Two patch techniques: **subspace locks**, which clamp an active subspace of the latent to freeze attributes the latent encodes nonlinearly, and **gated circuit wiring**, which frees channels by regression and installs an exact ReLU gate in them.
-- A record of a human-directed agent loop under these gates: what was proposed, what the checks caught and how each was resolved (§8.2).
-- Case studies on two models trained for this paper (CatGAN-26, TinySR-26), and on six of the first author's 2017–2020 checkpoints and MobileNetV2.
-- A release of all code, patches, git histories, test results and model weights.
+- An instruction set for rewiring trained (Leaky)ReLU networks: exact identities that carry, gate, bound and switch signals, and two ways to make room, with exactness and cost measured on real models.
+- Four agent-written patches on small trained models that do what training the model does not, each compared with fine-tuning:
+  - compiled logic (odd-eyed cats);
+  - a repair with an output bound;
+  - a routed union that resolves a merge conflict;
+  - a local exception in a classifier.
+- An account of the human–agent loop that produced them, including the proposals the tests rejected (§7.2).
+- The engineering that lets many patches coexist (a self-testing text format, in-context tests, semantic merge checks, rebasing) and a 15-commit case study.
+- All code, patches, git histories and models.
 
 ## 2. Related work
 
-**Weight editing and model merging.** Existing ways to modify trained weights without full retraining fall into four families:
-- *Learned editors.* MEND [30] trains auxiliary networks that turn a low-rank decomposition of the fine-tuning gradient into a fast weight update. Text-to-LoRA [34] generates low-rank adapters for a language model directly from a task description.
+**Weight editing and model merging.** Existing ways to change trained weights without full retraining fall into four families:
+- *Learned editors.* MEND [30] trains auxiliary networks that turn a low-rank decomposition of the fine-tuning gradient into a fast weight update. Editable Neural Networks [40] meta-train a model so that later edits stay local. Text-to-LoRA [34] generates low-rank adapters from a task description.
 - *Locate-then-edit and lifelong editing.*
-  - ROME [2] and MEMIT [31] make closed-form updates to factual associations in one or several layers of a language model.
-  - GRACE [32] (a discrete key-value codebook) and AlphaEdit [33] (which projects each update onto the null space of preserved knowledge) address interference across sequences of edits.
-  - In generative image models, GANSpace [6] and InterFaceGAN [7] steer latent directions, GAN dissection [8] identifies units with semantic roles, and Bau et al. [9] rewrite a generator's rules by editing a layer's weights.
-- *Task arithmetic and merging.* Task arithmetic [3] adds and subtracts fine-tuning deltas, model soups [4] average fine-tuned weights, and TIES-merging [5] resolves sign and magnitude interference between deltas.
-- *Direct weight-space programming.* Takehi et al. [1] showed that language models can read weight tensors and write gradient-free edits.
+  - ROME [2] and MEMIT [31] make closed-form updates to factual associations in a language model's layers.
+  - GRACE [32] keeps a discrete codebook of edits that fire only near their keys, which our exception unit (§4.5) resembles. AlphaEdit [33] projects each update onto the null space of preserved knowledge.
+  - In image generators, GANSpace [6] and InterFaceGAN [7] steer latent directions, GAN dissection [8] finds units with semantic roles, and Bau et al. [9] rewrite a generator's rules by editing a layer.
+- *Task arithmetic and merging.* Task arithmetic [3] adds and subtracts fine-tuning deltas, model soups [4] average fine-tuned weights, and TIES-merging [5] resolves interference between deltas.
+- *Weight-space programming.* Takehi et al. [1] showed that LLMs can tell from raw weights what a network was trained to do. In their experiments, an LLM:
+  - fixes a stuck control policy by adding a separate path through a few units per layer;
+  - writes game-playing networks from scratch;
+  - removes a looping direction from a 0.8B-parameter language model.
 
-**Where WSSE differs.** Each of our operators is classical linear algebra related to the methods above. For example, the Type I conflict resolution of §3 projects onto an orthogonal complement, in the same spirit as AlphaEdit's null-space projection. What none of these methods provides is a software-engineering lifecycle around heterogeneous edits:
-- one hash-pinned text format for subspace locks, gated channel circuits, output folds and fine-tune deltas alike;
-- tests for every edit, run against every other edit;
-- a pairwise check for order dependence;
-- rebasing across upstream model updates.
+  Our agent works through tools rather than in its context window. We concentrate on topology edits with exactness and bounds, and on what it takes to keep many such edits working.
 
-In WSSE, an edit made by any of these methods would be one more patch type, and the question is what its tests catch in context.
+Most of these change weights inside a fixed architecture; GRACE's codebook and low-rank adapters add parameters of a fixed form. The patches here change the architecture as each edit requires: they add carriers, gates, guards, units and branches, built from exact identities.
 
-**Version control for models.** Raffel [25] argued that models should be developed like open-source software, improved continually by many contributors through merging and versioning. Git-Theta [24] puts that into practice: a git extension that tracks parameter-level changes to checkpoints, stores updates efficiently and merges models automatically. WSSE shares the premise and differs in what a change is and how it is checked:
-- **Changes:** WSSE stores an edit as a few readable parameters of a high-level operator (a direction, a target, a 3×3 colour map), not as a parameter diff.
-- **Checks:** each edit carries executable tests, run in the context of every other edit; pairs of edits are checked for semantic conflicts, which no textual merge detects; and a repository can be rebased onto an updated checkpoint with stale-patch detection.
+**Repair with guarantees.** Provable repair [39] solves for new weights of a ReLU network so that a specification holds on whole regions of input space, and verifiers such as Reluplex [41] check such properties. Our guards get their bound by construction instead: the bound is a wiring of exact identities, so it holds on every input and needs no solver. The price is that a guard can only bound quantities the network itself computes, such as a smoothed copy of its input.
 
-The two approaches are complementary: Git-Theta handles efficient storage and merging of weights, and WSSE handles the specification and testing of edits.
+**Building networks by hand.** ReLU networks compute exactly the continuous piecewise-linear functions [42], which is why min, max and gates compile exactly.
+- Net2Net [35] grows a trained network wider or deeper while preserving its function, to speed up training. We use the same function-preserving growth to make room for circuits.
+- Tracr [36] compiles RASP programs [37] into transformer weights from scratch. We compile small programs into networks that are already trained, around their learned computation.
+- Mixture-of-experts layers [38] route inputs between sub-networks with a trained gate. Our union (§4.4) routes between whole networks with a gate fitted in closed form from the experts' own outputs.
 
-**Testing models.** Behavioural testing with CheckList [26] made capability-level unit tests standard practice for language models, and Sculley et al. [27] described how machine-learning systems accumulate technical debt that ordinary software practice must manage. WSSE's tests are behavioural tests attached to individual edits and evaluated in context, so a failing test points at the change that broke it.
+**Version control and testing for models.** Raffel [25] argued that models should be developed like open-source software, and Git-Theta [24] versions and merges checkpoints in git at the level of parameters. Behavioural testing with CheckList [26] made capability-level tests standard for language models, and Sculley et al. [27] described the technical debt that machine-learning systems accumulate. WSSE stores an edit as a few readable parameters with executable tests, runs those tests in the context of every other edit, and checks pairs of edits for semantic conflicts. It complements Git-Theta, which handles storage and merging of the weights themselves. Treating weights as a data modality [28, 29] motivates the same infrastructure.
 
-**Weights as data.** A growing literature treats trained weights as a data modality to be represented, generated and edited [28], and argues that checkpoints should be first-class objects [29]. WSSE contributes engineering infrastructure for that view: identity (content hashes), history (git) and specifications (tests).
+**Tools used in §5–6.** Active subspaces [10] give the subspace locks. Linear CKA [11] and model stitching [12, 13] compare and join checkpoints. Unit alignment [14] is the precondition for merging independently trained networks, and closed-form "imprinted" heads [15] add a class to a classifier.
 
-**Comparing and combining networks.** We use linear CKA [11] and model stitching [12, 13]. Unlike stitching studies that insert a trained adapter at run time, we fold the fitted 1×1 map into the receiving convolution, so the hybrid has no extra layers. Merging independently trained networks requires aligning their units first [14]. Closed-form classifier heads ("imprinting") [15] give us a cheap way to add a test oracle to a public model.
+## 3. What we built around the agent
 
-**Sensitivity analysis.** Our subspace locks use active subspaces [10]: the dominant eigenvectors of the expected outer product of a function's gradient.
+### 3.1 An instruction set of exact identities
 
-## 3. Weight patches and `wpgit`
+Each identity is one hidden layer: weights into it, the activation, weights out of it. The weights out of a layer fold into whatever linear layer follows. A circuit therefore costs channels, not layers, except where two nonlinearities must be composed.
 
-A **weight repository** is a git repository holding only text:
-- `base.json` records the checkpoint's path, its content hash and, optionally, a test-domain module that defines the attributes and forward pass the tests use;
-- `patches/*.weightpatch.json` holds the edits.
-
-Built models (`build/model.npz`) are not tracked.
-
-**Content addressing.** A checkpoint $W$ is identified by a 16-character SHA-256 prefix over its sorted tensor names and float32 bytes,
-$$\text{hash}(W) = \text{SHA256}\Big(\textstyle\bigoplus_{k \in \text{sorted}(W)} \text{utf8}(k) \,\|\, \text{bytes}_{\text{f32}}(W[k])\Big)_{[:16]}.$$
-`wpgit` refuses to build if the checkpoint on disk does not match `base.json`, or if a patch targets another hash. Patches may declare `requires`; they are applied in topological order, with ties broken by file name.
-
-**Operators.** Patches store compact parameters, not expanded deltas:
-
-| operator | acts on | definition | used for |
+| identity | computes | channels | max error, float64 / float32 |
 |---|---|---|---|
-| `latent_shift` | first dense layer | $z' = z + \alpha d \Rightarrow b' = b + \alpha\, d^\top K$ | steering an attribute |
-| `latent_clamp` | first dense layer | $z' = (I - dd^\top)z + t d \Rightarrow K' = K - d(d^\top K),\ b' = b + t\,d^\top K$ | freezing an attribute; $k$ orthonormal clamps lock a rank-$k$ subspace |
-| `sparse_add` | any tensor | indexed deltas $\Delta W$ | channel pruning, circuit wiring |
-| `fold_output_affine` | last linear conv | $K'_{hwip} = \sum_o K_{hwio} M_{po}$, $b' = Mb + t$ | colour and black-level calibration |
-| `fold_output_spatial` | last linear conv | $K \leftarrow S * K$ | sharpening or blurring |
-| `set_bias`, `scale_ac` | any bias / conv | $b \leftarrow v$; $K' = \bar K_{DC} + \gamma (K - \bar K_{DC})$ | ablation; high-frequency gain |
-| dense delta | all tensors | $W + \Delta W$ | fine-tunes as patches (§6) |
+| `carry` | $u$, for $u \ge 0$ | 1 | 0 / 2.4×10⁻⁷ |
+| `pass` | $u$ | 2 | 1.8×10⁻¹⁵ / 1.4×10⁻⁶ |
+| `relu` | $\max(u, 0)$ | 2 | 8.9×10⁻¹⁶ / 1.4×10⁻⁶ |
+| `abs` | $\lvert u \rvert$ | 2 | 1.8×10⁻¹⁵ / 1.1×10⁻⁶ |
+| `min`, `max` | $x - \text{relu}(x - y)$, $y + \text{relu}(x - y)$ | 4 | 3.6×10⁻¹⁵ / 3.3×10⁻⁶ |
+| `clamp` | $\text{lo} + \text{relu}(x - \text{lo}) - \text{relu}(x - \text{hi})$ | 4 | 2.0×10⁻¹⁵ / 1.4×10⁻⁶ |
+| `step` | 0 below $t$, 1 above $t + 1/k$ | 4 | 3.7×10⁻¹⁴ / 3.1×10⁻⁵ |
+| `and`, `or` | $\text{relu}(b_1 + b_2 - 1)$, $b_1 + b_2 - \text{relu}(b_1 + b_2 - 1)$ (binary $b$) | 2, 4 | 1.1×10⁻¹⁷ / 6.0×10⁻⁸ |
+| `gate` | $\text{relu}(p - t - M(1 - g))$: $p - t$ where $g = 1$, 0 where $g = 0$ | 2 | 1.3×10⁻¹⁵ / 8.3×10⁻⁷ |
+| `mux` | $y + \text{relu}(x - y - M(1-g)) - \text{relu}(y - x - M(1-g))$ $= g\,?\,x : y$ | 6 | 2.7×10⁻¹⁵ / 1.9×10⁻⁶ |
 
-A `fold_output_affine` patch is 12 numbers that rewrite 4,803 weights at build time. A reviewer can read it in full, which is not true of the deltas it compiles to.
+*Table 1. Each identity compiled into a real one-hidden-layer network with LeakyReLU 0.2 (as in CatGAN-26 and TinySR-18A) and compared with its target on 100,000 random inputs; plain ReLU (as in TinySR-26) gives equal or smaller errors. `step` is tested outside its band; `gate` and `mux` assume the big-M constant exceeds the signals they switch. `step`'s float32 error is larger because its slope ($k = 64$) amplifies rounding.*
 
-**Commands.**
-- **`wpgit build`** applies all patches in order and prints the resulting hash.
-- **`wpgit test`** runs every patch's tests *in context*: for patch $p$ it compares the full build with the full build minus $p$ and everything that requires $p$. A patch must still do what it promises after everything else has been merged.
-- **`wpgit check`** examines every pair $(A, B)$ not linked by `requires`. It builds $W_{A\circ B}$ and $W_{B\circ A}$ and reports one of three verdicts:
-  - **commutes (structurally):** the two touch disjoint tensors;
-  - **commutes (numerically):** $\max |W_{A\circ B} - W_{B\circ A}| < 10^{-5}$;
-  - **conflict:** anything else, reported with the output difference between the two orders.
-- **`wpgit rebase <weights>`** re-pins the repository to a new checkpoint with the same architecture.
-  - Latent ops act on the model's *input*, so they mean the same thing on any base with that input.
-  - A `sparse_add` stores a difference from the old values of its entries. Like a text diff whose context lines changed, it is marked `stale_context` when those entries have moved.
-  - The tests then decide what still holds (§5).
+**Topology edits that change nothing.** On CatGAN-26 (64 latents, float64):
+- **Width:** adding 16 channels with arbitrary incoming weights and zero outgoing weights to every hidden convolution (8.13M → 8.72M parameters) changes the output by exactly 0.
+- **Depth:** inserting a `pass` identity layer after every hidden convolution (12 → 22 weight layers) changes it by at most 9.2×10⁻⁷, the rounding of float32 weights scaled by $1/(1+\alpha)$.
 
-**Two kinds of semantic conflict.** A textually clean merge can still be wrong in two ways:
-- **Type I, interference.** Two patches act on overlapping subspaces, so whichever runs second partly undoes the first. This can be resolved algebraically, by orthogonalising one against the other.
-- **Type II, contradiction.** Two patches want incompatible things, such as freezing the background and brightening it. No algebra helps here: a commit has to record a decision.
+**A constraint the identities impose.** `gate` and `mux` need a constant $M$ larger than the signals they switch, and $M$ must also be small enough for float precision. When the agent disabled a guard by setting its offset to $10^6$, the two large terms of the `relu` identity cancelled in float32 with errors of 0.015. An offset of 10, still above any image value, was exact to 2.5×10⁻⁶ (§7.2).
 
-## 4. Case study: a cat generator under version control
+### 3.2 Making room: free or grow
 
-### 4.1 CatGAN-26
+**Freeing** channels $S$ of a layer regresses their activations on the remaining channels $K$ of the same layer, with a bias, using the layer's activations on sample inputs. The fitted map $B$ is folded into the next layer, and the freed channels are zeroed:
+$$W'_{\cdot,\cdot,K,\cdot} = W_{\cdot,\cdot,K,\cdot} + W_{\cdot,\cdot,S,\cdot}\,B, \qquad b' = b + \textstyle\sum_{\text{taps}} W_{\cdot,\cdot,S,\cdot}\,\beta_0 .$$
+- **Which channels:** the agent picks them greedily, by unexplained variance times the energy of their outgoing weights. Both come from the precision matrix of the layer's activations, refitted after each pick.
+- **Where it is not exact:** freeing loses only the unexplained variance, plus a border effect where zero padding makes the constant term non-constant.
 
-We trained CatGAN-26 for this paper on the 5,153 cat photos of AFHQ [18] (CC BY-NC 4.0), downsampled to 128×128, on one 8 GB consumer GPU.
-- **Generator (8,133,283 parameters).** It deliberately keeps a plain DCGAN-style structure [17]: dense → reshape to 4×4×512 → five blocks of [2× nearest upsample, conv, BatchNorm, LeakyReLU, conv, BatchNorm, LeakyReLU] → linear output conv. That keeps every patch operator above applicable and exact.
-- **Training.** A residual discriminator with minibatch standard deviation; the non-saturating logistic loss with a lazy R1 penalty [21] ($\gamma = 0.1$, a heuristic from [20]); differentiable augmentation [19]; Adam(0, 0.99) at $2\times10^{-4}$, batch 32, bf16; an exponential moving average of the generator. 30,000 steps took about 2.9 hours. A first attempt with a spectral-normalised discriminator failed: within 2,000 steps it scored real cats, generated cats, noise and a blank image all at −0.0024 ± 0.00003.
-- **Export.** BatchNorm is folded into the convolutions and the output scaling into the last layer, so the exported dict maps $z$ straight to an image in $[0,1]$. It matches the trained network to $3.8\times10^{-6}$.
+**Growing** adds channels with zero outgoing weights, which is exact (§3.1) but costs parameters.
 
-**Quality**, judged by an ImageNet classifier (MobileNetV2 [16]) on 500 images per row:
-
-| images | called a domestic cat | Fréchet distance to held-out real cats (MobileNetV2 features) | nearest training image (thumbnail correlation: median / share > 0.95) |
+| layer (channels) | 1/64 | 1/16 | 1/4 |
 |---|---|---|---|
-| real AFHQ validation cats | 97% | — | 0.70 / 2% |
-| real AFHQ training cats | 96% | 47.1 (real-vs-real floor) | — |
-| **CatGAN-26** | **96%** | 60.6 | 0.70 / 0% |
-| CatGAN-26, truncation 0.7 | 97% | 68.2 | 0.72 / 0% |
+| dense (512) | **38.2** / 33.8 | **32.4** / 29.9 | **24.4** / 20.8 |
+| b1c1 (512) | **53.9** / 26.7 | **44.9** / 22.1 | **34.1** / 15.5 |
+| b1c2 (512) | **56.8** / 28.2 | **45.9** / 20.8 | **29.7** / 14.6 |
+| b2c1 (256) | **50.6** / 28.2 | **37.0** / 19.3 | **21.9** / 12.8 |
+| b2c2 (256) | **41.9** / 27.6 | **32.2** / 19.3 | **24.7** / 14.4 |
+| b3c1 (128) | **39.2** / 26.7 | **30.3** / 19.8 | **21.9** / 14.6 |
+| b3c2 (128) | **37.9** / 26.8 | **30.6** / 22.1 | **23.6** / 16.2 |
+| b4c1 (64) | **41.3** / 32.9 | **33.9** / 26.1 | **24.2** / 18.8 |
+| b4c2 (64) | **39.9** / 28.9 | **34.5** / 23.9 | **25.6** / 18.8 |
+| b5c1 (32) | **38.2** / 30.4 | **34.8** / 28.5 | **26.1** / 19.2 |
+| b5c2 (32) | **47.5** / 31.4 | **45.3** / 31.3 | **34.0** / 24.4 |
 
-CatGAN-26 samples are recognised as cats as often as real photos. As a distribution they are further from real cats than real cats are from each other, and they are no closer to their nearest training image than real held-out cats are, so there is no sign of memorisation.
+*Table 2. Room inside CatGAN-26. PSNR of the generator's images against the unedited generator's (256 held-out latents) after freeing a share of one layer's channels: **with the regression fold** / zeroed without it. Fitted on 512 other latents. A share below one channel frees one channel (the 1/64 column of the 32-channel layers). Appendix B has all six shares.*
 
-### 4.2 Four kinds of patch
+- **Trained layers have spare capacity, and the fold is what recovers it.** Freeing 1/64 of one layer's channels with the fold leaves the images at 37.9–56.8 dB against the unedited generator, against 26.7–33.8 dB when the same channels are simply zeroed. At 1/16 the fold is worth 6–25 dB in the convolutions, but only 2.5 dB in the dense layer.
+- **Room is cheapest in the widest convolutions** (b1, 512 channels: 54–57 dB at 1/64) and dearest in the dense layer, the 128-channel b3 layers and b5c1 (38–39 dB). The dense layer's 4×4 cells give the regression few samples per channel.
+- **Freeing costs add up, so where exactness matters the agent grows instead.** The odd-eye wire needs one channel in each of ten layers. Freeing them left the images at 33.6 dB PSNR against the base; with the gate installed, the mean change outside the eyes was 3.97 RGB levels. Growing them added 42,548 parameters (+0.5%), left the base function intact, and cut that change to 0.24.
 
-A test domain (`cat_domain.py`) defines what the tests measure, from regions of the mean AFHQ face:
-- five pixel attributes (fur warmth, fur lightness, background, eye green, saturation);
-- an iris mask;
-- an eye-colour score.
+### 3.3 Patches, tests and `wpgit`
 
-Latent directions are fitted by ridge regression of each attribute on 1,200 samples. Everything is reported on 400 held-out samples.
+A **weight patch** is a text file (`.weightpatch.json`). It contains:
+- the checkpoint it targets, by content hash: the first 16 hex digits of SHA-256 over the sorted tensor names and float32 bytes;
+- the patches it requires;
+- its operations, as compact parameters;
+- its tests.
 
-**Steering: latent shifts.** Shifting $z$ along a fitted direction moves its attribute.
-- Raw directions are entangled: on average a shift moves the *other* attributes by 2.14 SD in total.
-- Orthogonalising each direction against the others cuts that to 0.36 SD, but it also erases fur warmth (−0.01 SD on target). On cats, fur warmth and saturation are nearly the same direction (cos 0.951), because orange fur *is* saturated colour.
-- Orthogonalising against everything except near-duplicates (|cos| > 0.9) restores warmth: +1.25 SD on target, with 0.95 SD off target, most of it the warmth–saturation pair itself.
+The operators of the first release act on a fixed architecture:
+- latent shifts and clamps folded into the first dense layer;
+- affine and spatial folds of the output layer;
+- sparse diffs, for channel freeing and circuit wiring;
+- dense deltas, for fine-tunes.
 
-**Locking: from one direction to a subspace.** A `latent_clamp` pins $z$'s coordinate along a direction, so the attribute should stop varying. On CatGAN-26 it does not: the attributes are only partly linear in $z$ (held-out $R^2$ 0.32–0.66), and a one-direction lock leaves 72% of fur-lightness variance and 43% of background variance.
+A 12-number colour fold rewrites 4,803 weights at build time, and a reviewer can read all 12 numbers. The topology patches of §4 change layer widths and add layers. They are built and tested by their scripts, and adding grow and insert operators to the format is future work (§7.4).
 
-A **rank-$k$ subspace lock** clamps $k$ orthonormal directions, which is just $k$ `latent_clamp` ops:
-- The first direction is the fitted one, with its target.
-- Each further direction is the top eigenvector of $\mathbb{E}[g g^\top]$, where $g = \nabla_z a(z)$ is the attribute's gradient at already-clamped latents with the chosen directions projected out. This is an active subspace [10], refitted greedily after each clamp.
-- Extra directions are clamped to 0, the latent mean.
-- The rank is the smallest $k$ that brings the variance ratio to 0.2 on separate selection latents, leaving a margin under the test bound of 0.3.
+A **weight repository** is a git repository holding only text: a `base.json` that pins the checkpoint, and the patches. `wpgit` adds what git cannot know about weights:
+- **`build`** applies the patches in dependency order and refuses a checkpoint whose hash does not match.
+- **`test`** runs every patch's tests *in context*: it compares the full build with the full build minus that patch and anything that requires it.
+- **`check`** builds every independent pair in both orders and reports whether the pair commutes, structurally or numerically, or conflicts.
+- **`rebase`** re-pins the repository to a new checkpoint. It marks a sparse diff `stale_context` when the entries it was computed against have moved, like a text diff whose context lines changed.
 
-| lock | rank 1 | rank 2 | rank 3 | rank 8 | random second direction (control) |
+A textually clean merge can hide two kinds of **semantic conflict**:
+- **Type I, interference:** two patches act on overlapping subspaces, so whichever runs second partly undoes the first. This can be resolved algebraically.
+- **Type II, contradiction:** two patches want incompatible things. A commit must record a decision.
+
+### 3.4 How the agent works
+
+For each goal, the agent works through a loop:
+1. **Read the model.** It reads the model's op list and probes its activations on sample inputs.
+2. **Design the circuit.** It chooses where the circuit should read and write, which identities express it, and how to make room.
+3. **Compile and fit.** It writes a script that compiles the wiring and fits the free numbers in closed form.
+4. **Test and look.** It runs the specification test and inspects the outputs.
+5. **Revise.** When a test or an image shows a problem, it changes the patch.
+
+Every proposal and its fate are recorded in §7.2. Table 3 separates what the agent wrote by hand from what was fitted.
+
+| patch | written by the agent as constants | fitted in closed form | room | fit time |
+|---|---|---|---|---|
+| odd eyes (§4.2) | 26: a 16-cell coordinate pattern, 9 copy taps, the AND weight | 293: a 289-number iris detector, its threshold, a 3-number colour | 1 channel in each of 10 layers + 2, grown | seconds per fit; 4 min with all threshold sweeps |
+| guard (§4.3) | the reference path (copy taps, a 5×5 binomial kernel) and the identity weights of the min-gate | 12: a colour map and offset; 2–3 guard settings from a 30- or 36-point grid | 3 channels in each of 4 layers, grown or freed; 1–2 new layers | 11 s |
+| union (§4.4) | 6 self-check features; the multiplexer | 33: a linear router | three networks side by side | 70 s, mostly running the experts on 360 fitting inputs |
+| exception (§4.5) | the unit's wiring to the five cat classes | 1,281 probe weights; threshold and boost by rule | one new unit | 0.35 s |
+
+*Table 3. What each patch is made of.*
+
+## 4. Patches that training cannot write
+
+### 4.1 Four small models
+
+- **CatGAN-26** (8.1M parameters), trained for this paper on the 5,153 AFHQ cat photos [18] at 128×128. It is a DCGAN-style generator [17]: dense → 4×4×512 → five blocks of [2× nearest upsampling, two 3×3 convolutions with LeakyReLU 0.2] → output convolution. Training used a lazy R1 penalty [21], differentiable augmentation [19] and heuristics from [20], for 30,000 steps (2.9 hours on one 8 GB GPU). MobileNetV2 calls 96% of its samples domestic cats (97% for real photos), and they are no closer to their nearest training image than held-out real cats are (Appendix B).
+- **TinySR-18A** (317,059 parameters), a 2× super-sampler the first author trained in 2018: five 5×5 convolutions with LeakyReLU 0.2 and nearest upsampling. It lifts black.
+- **TinySR-26** (276,732 parameters), a 2× super-sampler trained for this paper: six residual blocks with ReLU [23], a sub-pixel upsampler [22] and a global bicubic skip.
+- **MobileNetV2** [16] (3.5M parameters), the public ImageNet classifier.
+
+### 4.2 Logic and position in a GAN: from blue eyes to odd eyes
+
+**Blue eyes.** The first circuit was built for a 2018 anime generator (§6) and ported to CatGAN-26:
+1. `prune2` frees two channels of the last hidden layer.
+2. A linear iris detector reads 3×3 neighbourhoods of the layer below. It is fitted with an iris mask on fitting images only; no mask is used at run time.
+3. The detector drives the two freed channels with opposite signs. By the `relu` identity, the output layer reads an exact ReLU gate, and adds an ice-blue tint only where the gate fires.
+
+Its threshold is chosen as a CI pipeline would choose it: the strictest quantile whose result on the fitting images already passes the patch's own test (iris hue within 200–250°).
+- **Results:** on 150 held-out cats it reaches a blue median hue with 23× less change outside the eyes than an ungated 1×1 colour fold (MAE 0.0059 against 0.136). Moving along a latent "towards blue" direction never reaches the eyes.
+- **Per image, it is a partial success:** 40% of cats end with irises in the band, and none did before. The 3×3 linear detector fires on part of the irises and leaks onto dark tabby stripes.
+
+**Odd eyes.** Convolutions are local, so nothing in a 3×3 window of features says which half of the image it is in. Only the dense layer, which has a separate bias for each 4×4 cell, can hold a spatial pattern. The agent therefore built a coordinate wire:
+1. **Room.** Grow one channel in the dense layer and in each of the nine convolutions from b1c1 to b5c1.
+2. **Wire.** The dense channel's bias holds RIGHT = 1 on the right two columns of the 4×4 grid and 0 on the left, with a zero kernel. Each convolution copies it with a centre tap of 1, and nearest upsampling doubles it. RIGHT ≥ 0, so `carry` passes it through every LeakyReLU exactly. At 128 px it is exactly the right-half indicator (error 0).
+3. **Gate.** Grow two channels in b5c2 and install the iris gate there, fitted as before (the detector never sees the wire). The gate's pre-activation gets $-M \cdot \text{RIGHT}$, giving $\text{relu}(p - t - M\cdot\text{RIGHT})$, which is the iris gate AND NOT RIGHT. Inverting the logic to the right eye takes one sign and one bias. The gate and the output layer read the wire at their centre taps only, so the AND acts pixel by pixel.
+
+| patch (300 held-out cats) | left irises in 200–250° | right irises in band | change outside the eyes (MAE, RGB levels) | largest change in the other half |
+|---|---|---|---|---|
+| base | none | none | — | — |
+| **left eye only** | **42%** | **0%** | 0.24 | **1.6×10⁻⁷** (float64) |
+| right eye only | 0% | 48% | 0.18 | 1.4×10⁻⁶ (float32) |
+| both eyes (the gate ignores the wire) | 42% | 48% | 0.42 | — |
+| left eye only, room freed instead of grown | 42% | 0% | 3.97 | — |
+
+*Table 4. Odd-eyed cats. Shares are of cats with a visible iris on that side (274 left, 281 right). "Other half": the right half for the left-eye patch and vice versa, compared with the same network without the gate.*
+
+- **The logic is exact; the detector is not.** The AND gate makes the other half provably untouched, to float rounding. Which irises turn blue is still decided by a fitted 3×3 linear detector, which fires on 42–48% of eyes and leaks onto striped fur (Figure 1).
+- **Growing beats freeing here.** With freed room the change outside the eyes is 3.97 RGB levels, 16× the 0.24 of grown room.
+- **Why not gradient descent?** Fine-tuning the generator toward odd-eyed cats would need a loss that defines them, and examples or a critic for it. It would move every output, and nothing would keep the right half fixed. The patch needs no odd-eyed data: the wire is written by hand, and the detector reuses a fit to ordinary cats.
+
+### 4.3 A repair with a bound: TinySR-18A
+
+**Background (v1.0 of this paper).** A static audit of TinySR-18A's weights found a positive output bias that lifts pure black (§6). A first, untested hotfix zeroed that bias and boosted high frequencies, and lost 3.50 dB. The regression gate written in response asks three things of a patch:
+- on five regression images, it may lose at most 0.10 dB and 0.005 SSIM;
+- on seven edge cases (sprites with black outlines, a smiley), it must gain PSNR;
+- on the same edge cases, it must lower the black floor below the base's 8.90 RGB levels.
+
+Every output-layer patch failed the gate:
+- the best colour fold gains +2.93 dB but raises the black floor to 13.51;
+- anchoring black destroys mid-tones (−8.98 dB).
+
+The tone error is nonlinear, and no edit of the output layer can express its fix.
+
+**Rewiring.** The agent kept the 12-number colour fold and added what the output layer lacked, a view of the input:
+1. **Reference path.** Three channels per hidden layer carry the low-resolution image. Conv5 and conv6 copy it, the network's own nearest upsampling doubles it, conv7 smooths it with a 5×5 binomial kernel, and conv8 copies it. Images and kernels are non-negative, so `carry` passes the reference $R$ through every LeakyReLU exactly.
+2. **Guard.** Conv9 now also emits $[f, -f, u, -u]$ with $u = f - R - \delta$. One new 1×1 layer computes $f - \text{relu}(u) = \min(f, R + \delta)$, where $f$ is the colour-folded output.
+3. **Dark-only guard.** The plain guard also caps thin highlights (below). The second version caps only where the reference is dark: $\min\big(f,\ R + \delta + K\,\text{relu}(R - t)\big)$. It costs one more 1×1 layer and six more channels.
+
+The guard's settings were chosen on the nine calibration images and nothing else: $\delta = 1/255$ for both guards, plus $t = 0.2$ and $K = 2$ for the dark-only guard.
+
+| variant (TinySR-18A) | regression ΔPSNR | edge ΔPSNR | black floor (RGB) | parameters | gate |
+|---|---|---|---|---|---|
+| base | — | — | 8.90 | 317,059 | |
+| colour fold (12 numbers, v1.0) | +2.93 | +1.81 | 13.51 | 317,059 | FAIL (black floor) |
+| guard alone | −0.32 | −0.15 | 5.84 | 362,119 | FAIL (regression) |
+| **colour fold + guard** | **+3.37** | **+2.02** | **7.33** | 362,119 | **PASS** |
+| colour fold + guard, freed channels | +3.45 | +1.83 | 7.11 | 331,507 | PASS |
+| colour fold + dark-only guard | +3.37 | +2.39 | 7.88 | 372,403 | PASS |
+| colour fold + dark-only guard, freed channels | +3.43 | +2.19 | 7.61 | 341,341 | PASS |
+| fine-tune all weights on the calibration images, 500 steps (76 s) | +4.34 | +2.88 | 1.62 | 317,059 | PASS |
+| the same, 4,000 steps (528 s) | +5.07 | +3.63 | 2.26 | 317,059 | PASS |
+
+*Table 5. The gate of v1.0 on rewired networks and on fine-tunes. The fine-tune uses Adam on the same nine calibration images, L1 loss with dark pixels weighted ×8; times are on a GPU shared with other jobs.*
+
+![Figure 2](figures/fig_guarded_sr.png)
+
+*Figure 2. TinySR-18A outputs on a smiley, a sprite, a photo and a gradient (PSNR per image). Columns: base; the colour fold; fold + guard; fold + dark-only guard; a 4,000-step fine-tune; ground truth.*
+
+- **The bound holds on every input.** On random noise and on calibration images, the rewired network matches $\min(f, R+\delta)$ to 2.6×10⁻⁶ and exceeds its bound by at most 3.6×10⁻⁷ (float32 rounding). The dark-only guard matches its formula to 3.1×10⁻⁶ and its bound to 7.7×10⁻⁷. Wherever the input is black around a pixel, $R = 0$ there, and the output is at most 1/255. For the dark-only guard this holds wherever the smoothed input is below 0.2 (51 levels): there the output is at most 1/255 above it. That is a statement about all inputs, not about the test images.
+- **Freed channels work as well as new ones here** (+3.45 dB, PASS), with 4.6% more parameters instead of 14%. Only the guard's own output channels and layer are new.
+- **The plain guard has a cost the gate barely sees.** It caps every pixel, so thin bright lines are dimmed toward the smoothed reference (Figure 2: the smiley's border). The dark-only guard leaves highlights alone and gains more on the edge cases (+2.39 against +2.02 dB), at a slightly higher black floor (7.88 against 7.33).
+- **Fine-tuning does better, and bounds nothing.** With the same nine images, 500 Adam steps pass the gate with a black floor of 1.62. But the verdict flips between checkpoints: 250 and 1,250 steps fail. A first run with the same seed failed at 250 and 750 steps instead, because GPU training here is not bit-reproducible (Appendix B). The fine-tune changes all 317,059 weights, and nothing bounds its output on other inputs. The patch is 12 fitted numbers, two chosen settings, a wiring and a stated bound. The two also compose: a guard can be added on top of a fine-tune.
+
+### 4.4 Grow instead of average: resolving a merge conflict
+
+**The conflict (v1.0).** Two branches were fine-tuned for 3,000 steps each from TinySR-26:
+- **bicubic**, which should be better on bicubic-downsampled inputs;
+- **noisy**, which should be better on noisy inputs.
+
+Stored as weight deltas, they merge by addition. The merge commutes exactly, and the deltas are nearly orthogonal (cosine 0.088). The merge's specification is a test: both claims hold, and no test falls more than 0.1 dB below the base. Every weight-space resolution failed it:
+- 25 weightings $W_0 + a\Delta_{\text{bicubic}} + b\Delta_{\text{noisy}}$;
+- cherry-picking layers, after a blame showed the regression spread over the whole network;
+- a 1,000-step repair fine-tune.
+
+Only joint retraining on both objectives passed. Within one network of fixed size, specialising for bicubic inputs and staying robust to nearest-neighbour inputs compete.
+
+**The union.** The agent kept all three networks (base, bicubic branch, noisy branch) side by side, so each keeps its exact function. It added a router that picks one per image, and combined the outputs with two `mux` identities.
+- **First router: input statistics.** It used eight mean filter energies of the input, at two scales. It reached 81% on the fitting images. On the test set it sent 30 of 180 nearest-neighbour inputs to the bicubic branch, which costs 4.9 dB on each of them, and the union failed (−0.96 dB).
+- **Second router: self-consistency.** Each expert's output is degraded again, by nearest-neighbour sampling and by antialiased bicubic downsampling, and compared with the input: six mean differences. The expert that agrees with the input under the right degradation wins. These features are strided convolutions, `abs` and one global average, so the router compiles with the same identities. It classified all 360 fitting inputs correctly.
+
+PSNR change against the base (dB) on 180 held-out AFHQ photos per input type (2×, 256 → 512 px):
+
+| model | bicubic inputs | noisy inputs | nearest inputs | parameters | meets spec |
+|---|---|---|---|---|---|
+| branch: bicubic | +0.23 | −0.47 | −4.88 | 276,732 | no |
+| branch: noisy | −0.20 | +3.26 | −1.01 | 276,732 | no |
+| merge: base + both deltas | −0.03 | +2.56 | −4.06 | 276,732 | no |
+| 25 weightings, cherry-picks, a 1,000-step repair (v1.0) | | | | 276,732 | none |
+| joint retraining, 3,000 steps from the base | +0.03 | +3.19 | +0.08 | 276,732 | yes |
+| union, router on input statistics | +0.21 | +2.69 | −0.96 | 830,196 + 43 | no |
+| **union, self-consistency router** | **+0.23** | **+3.26** | **+0.00** | 830,196 + 33 | **yes** |
+
+*Table 6. Resolving the merge conflict. The self-consistency router chose the right network for all 540 test images.*
+
+- **The union keeps both branches' whole gains**, equal to the best single network on each input type. It beats joint retraining on bicubic inputs (+0.23 against +0.03 dB).
+- **The switch is exact:** the two multiplexers match plain selection to 6×10⁻⁸.
+- **What it costs:** three networks' parameters, and, because the self-check needs every expert's output, three networks' compute. Joint retraining is compact but trades the bicubic gain away.
+- **Why gradient descent could not:** gradient descent on the fixed architecture had to find one set of weights for both tasks. Growth removes that constraint. Like a mixture of experts [38], the union routes between networks, but no expert is retrained and the gate is 33 numbers fitted in closed form.
+
+### 4.5 An exception in a classifier
+
+**Specification.** An AFHQ cat photo should get a domestic-cat class (ImageNet 281–285) as MobileNetV2's top-1, and dog and wild-animal photos (lions, tigers, leopards, foxes, wolves) must keep their predictions. MobileNetV2 gets 23 of 500 validation cats wrong: 19 are called "lynx", 3 "Angora" and 1 "leopard".
+
+**Patch.** The agent added one ReLU unit beside the linear classifier, a new branch:
+$$\text{logits}' = \text{logits} + \beta\;\text{relu}(w \cdot \phi + c - \theta)\;\mathbf{1}_{\text{cats}},$$
+where $\phi$ is the 1,280-dimensional pooled feature. Its numbers are fitted on 600 AFHQ training images per class:
+- $w$ and $c$: a ridge probe for "cat photo or not";
+- $\theta$: the smallest threshold that fires on no fitting dog or wild animal;
+- $\beta$: the smallest boost that fixes the fitting errors on which the unit fires (all 45).
+
+The patch adds 1,287 parameters and is fitted in 0.35 s.
+
+| fix (500 validation images per class) | cat errors fixed | correct cats broken | dog predictions changed | wild predictions changed (now "cat") | KL from base: dogs / wild | fit time |
+|---|---|---|---|---|---|---|
+| **exception unit** | **22/23** | 0 | **0** | **1 (1)** | **0.0001 / 0.0004** | 0.35 s |
+| head fine-tune with a preservation loss | 22/23 | 0 | 2 | 2 (1) | 0.0007 / 0.0017 | 3.0 s |
+| head fine-tune on the errors only | 23/23 | 0 | 375 (375 now "cat") | 336 (336) | 2.27 / 2.24 | 1.9 s |
+
+*Table 7. Fixing MobileNetV2's cat errors. Fine-tunes use Adam for 300 steps on the classifier's 1.28M weights. The preservation loss is the KL from the base predictions on the fitting dogs and wild animals.*
+
+- **Exactly local where it is off.** The unit fired on 499 cats, 73 dogs and 33 wild animals. On the other 894 dogs and wild animals the logits are the base model's exactly (largest change 0.0). Of the 106 non-cats on which it fired, one changed its prediction.
+- **The threshold does not stop the unit firing on new non-cats.** It was fitted on 1,200 of them, so the guarantee is local behaviour where the unit is off, plus a network that reports when it has fired, not silence on every non-cat.
+- **A careful fine-tune matches the fixes and drifts more** (4–8× the KL, four changed predictions). A quick one is a disaster: it turns 711 of 1,000 dogs and wild animals into cats.
+
+## 5. Keeping many patches working
+
+The patches of §4 were each tested alone. Models in use collect many edits from several authors over time, and the tests of single patches are not enough. This section is the v1.0 case study: a 15-commit git history of patches on CatGAN-26, built with the fixed-architecture operators of §3.3. The tests and their bounds were written for a 2018 anime generator (§6) and reused unchanged, except the eye-hue band.
+
+![Figure 3](figures/fig1_cat_repository.png)
+
+*Figure 3. CatGAN-26 through successive builds of its weight repository: base; the blue-eye circuit (`prune2`, `eye_gate`); a rank-2 lock on fur lightness; HEAD, with a background lock, where every test passes. Images upscaled 4× by TinySR-26. Same random latents in every row.*
+
+### 5.1 Fix the patch, not the test: subspace locks
+
+A `latent_clamp` pins the latent's coordinate along a fitted attribute direction, so the attribute should stop varying. On CatGAN-26 it does not. The attributes are only partly linear in the latent (held-out $R^2$ 0.32–0.66), and a one-direction lock leaves 72% of fur-lightness variance and 43% of background variance; the test bound is 30%.
+
+A **rank-$k$ subspace lock** clamps $k$ orthonormal directions:
+- the fitted direction, with its target;
+- then, one at a time, the top eigenvector of $\mathbb{E}[gg^\top]$, where $g$ is the attribute's gradient at already-clamped latents (an active subspace [10]), clamped to the latent mean.
+
+The rank is the smallest that reaches 0.2 on selection latents.
+
+| lock | rank 1 | rank 2 | rank 3 | rank 8 | random second direction |
 |---|---|---|---|---|---|
 | fur lightness | 0.72 | **0.19** | 0.05 | 0.01 | 0.72 |
 | background | 0.43 | **0.18** | 0.12 | 0.01 | 0.43 |
 
-*Variance of the locked attribute relative to the base model (lower is better; the test bound is 0.3).*
+*Table 8. Variance of the locked attribute relative to the base model (bound 0.3). The folded patch equals the latent edit to 4.1×10⁻⁶.*
 
-- **One extra direction is enough** for both attributes, and it is targeted: a random second direction does nothing.
-- **Exact:** the folded patch equals the latent edit to $4.1\times10^{-6}$.
-- **The cost is measurable.** On 300 samples per row, the fur-lightness lock leaves the other attributes' variance at 0.88–1.08 of base, but lowers feature diversity from 0.94 at rank 1 to 0.78 at rank 2 (Fréchet distance to real cats 111 → 143). Most of the change from base comes from the lock's purpose: every cat is moved to light fur. The background lock costs little (diversity 0.96 → 0.93 from rank 1 to rank 2).
+One targeted extra direction is enough; a random one does nothing. The price is diversity. Every cat is moved to light fur, and feature diversity falls from 0.94 to 0.78.
 
-![Figure 2](figures/fig_cat_subspace_locks.png)
+![Figure 4](figures/fig_cat_subspace_locks.png)
 
-*Figure 2. The same eight latents under one-direction (rank 1) and rank-2 locks. The rank-1 fur-lightness lock still lets a black cat through; at rank 2 every cat is light.*
+*Figure 4. The same eight latents under one-direction (rank 1) and rank-2 locks. The rank-1 fur-lightness lock still lets a black cat through; at rank 2 every cat is light.*
 
-**Recolouring eyes: channel reclamation and a gated circuit.** Can a patch make the irises blue and leave everything else alone, without adding parameters? It takes two patches:
+### 5.2 Fifteen commits
 
-1. **`prune2` frees two channels** of the last hidden layer.
-   - Each channel is scored by how well the other channels predict it, times the energy of its outgoing weights, and the two cheapest are chosen.
-   - Each is regressed onto the remaining channels with a 1×1 ridge fit, the regression is folded into the next layer, and both slots are zeroed.
-2. **`eye_gate` (requires `prune2`) wires a circuit into the freed slots.**
-   - A linear iris detector reads 3×3 neighbourhoods of the layer below. It is fitted with the iris mask on fitting images only; no mask is used at run time.
-   - Thresholded at a quantile $\theta$ of its scores on non-iris pixels, the detector drives the two slots with opposite signs. Because $\text{LeakyReLU}_\alpha(u) + \alpha\,\text{LeakyReLU}_\alpha(-u) = (1-\alpha^2)\,\text{ReLU}(u)$, the next layer reads an exact ReLU gate and adds an ice-blue tint only where it fires.
-   - $\theta$ is chosen the way a CI pipeline would choose it: the strictest quantile whose result on the *fitting* images already passes the patch's own test (iris hue within 200–250°). That gives the 0.98 quantile. An earlier rule failed on held-out cats and was replaced; Appendix B gives the full sweep.
+A script builds the history and records every command. Its findings:
+1. **Three feature branches merge cleanly:** warm fur, bright background and blue eyes. `wpgit check` finds no conflicts.
+2. **One patch fails only in context.** In the merged build, the warm-fur shift moves fur warmth by +0.92 SD (its test asks for at least 1.0) and the background by −0.55 SD (the guard allows ±0.3). Alone it gave +1.25 and −0.13 SD and passed: combined with the background shift, the generator's nonlinearity couples the two. `git revert` of the warm-fur merge reproduces a direct build of the remaining patches bit for bit.
+3. **Two lock branches merge without a textual conflict, and `wpgit check` reports three semantic conflicts.**
+   - **Type I:** the locks' subspaces overlap, so their order changes the model (output MAE 0.129). Gram–Schmidt orthogonalisation with recomputed targets makes them commute to 2.4×10⁻⁷.
+   - **Type II:** the background lock freezes the background that the bright-background shift moves. A commit records that the lock supersedes the shift, which also removes the third conflict.
+4. **HEAD passes every test.** With the one-direction locks of 2018, the same history fails at HEAD (variance ratios 0.708 and 0.677). With rank-2 subspace locks it passes (0.101 and 0.114), and the eye hue is 224.6°.
 
-| edit (150 held-out cats) | weights changed | iris hue | rest-of-image change (MAE) |
-|---|---|---|---|
-| base | 0 | 43° | 0 |
-| move along a latent "towards blue" direction (shift 2 / 4) | 0 (input edit) | 41° / 40° | 0.073 / 0.127 |
-| ungated 1×1 colour fold (whole cat turns blue) | 99 | 223° | 0.136 |
-| `prune2` alone | 1,445 | 37° | 0.0045 |
-| **`prune2` + `eye_gate`** | 1,445 (same entries) | **214°** | **0.0059** |
+The patches at HEAD are 88 KB of text on a 32.5 MB model.
 
-- **The gate reaches a blue median hue with 23× less collateral change than the ungated fold**, barely more than freeing the channels costs. The latent route changes the whole face and never reaches the eyes.
-- **Per image, it is a partial success.** 40% of held-out cats end up with irises in the 200–250° band (none did before), and 43% within 180–270°. Misses are mostly squinting or pale eyes. On average 0.8% of non-eye pixels change by more than 0.1, but 19% of cats have more than 1% such pixels, usually blue streaks on dark fur (Figure 1). A 3×3 linear detector on 32 channels separates irises from tabby stripes imperfectly.
-- **MobileNetV2 still calls 95% of the patched samples domestic cats.** It says the same of a cat dyed entirely blue, so the classifier guards against breaking the generator, not against ugly edits. The pixel tests do that.
+### 5.3 When the base model changes: rebasing
 
-![Figure 3](figures/fig_cat_blue_eyes_512.png)
+We trained CatGAN-26 4,000 more steps, from its full training state, and moved the repository onto each new checkpoint with `wpgit rebase`. The same tests then ran.
 
-*Figure 3. The first four held-out cats (not selected), base (top) and with `prune2` + `eye_gate` (bottom), upscaled 4× by TinySR-26. Right: blue irises with the rest of the face unchanged. First and third: the gate does not fire. Second: it leaks blue onto a tortoiseshell's ears.*
+| upstream | output change (MAE) | stale patches flagged | `prune2` / `eye_gate` change outside the eyes (≤ 0.015) | fur / background lock (≤ 0.3) | all tests |
+|---|---|---|---|---|---|
+| +500 steps | 0.045 | `prune2`, `eye_gate` | 0.006 / 0.005 | 0.104 / 0.109 | pass |
+| +1,000 | 0.067 | both | 0.009 / 0.009 | 0.112 / 0.127 | pass |
+| +2,000 | 0.094 | both | **0.024 / 0.024** | 0.154 / 0.134 | fail |
+| +4,000 | 0.127 | both | **0.025 / 0.025** | 0.161 / 0.294 | fail |
 
-**Exact refactors.** Some patches change nothing a test can see except what they claim:
-- mirroring the generator by permuting kernels and the dense layout matches the flipped image to $6.3\times10^{-6}$;
-- scaling the first dense kernel by 0.7 compiles the truncation trick $z \to 0.7z$ into the checkpoint, to $6.2\times10^{-6}$.
-
-### 4.3 Fifteen commits
-
-`exp5_git_demo.py` scripts the repository's history and records every command. The tests and their bounds were written for a 2018 anime generator (§7.5) and are reused unchanged, except the eye-hue band.
-
-```
-* 886bf1e Resolve: lock-background supersedes bright-background
-* 3cde449 Resolve semantic conflict: orthogonalise background subspace lock
-*   d612032 Merge feature/lock-background
-|\
-| * 31c6ee9 Lock background: clamp rank-2 latent subspace
-* |   5fdeb04 Merge feature/lock-fur-lightness
-|\ \
-| |/
-|/|
-| * 1db987a Lock fur lightness: clamp rank-2 latent subspace
-|/
-* c1a5c6d Revert warm fur
-*   ed1d6a1 Merge feature/blue-eyes
-|\
-| * 0225663 Blue eyes: gated eye-colour circuit in the freed slots
-| * d978fcb Prune 2 redundant b5c2 channels (fold into out)
-* |   f9d978e Merge feature/bright-background
-|\ \
-| * | 164dbae Bright background: shift latent along orthogonalised background direction
-| |/
-* |   3b8a0c5 Merge feature/warm-fur
-|\ \
-| |/
-|/|
-| * b4dc461 Warm fur: shift latent along orthogonalised fur_warmth direction
-|/
-* 17a7b76 Base: CatGAN-26 (AFHQ cats, 128x128)
-```
-*`git log --graph --oneline` of the repository. The four patches at HEAD are 88 KB of text (56 KB of it `prune2`'s sparse fold), on a 32.5 MB model.*
-
-1. **Three feature branches merge cleanly**: warm fur, bright background, and blue eyes. `wpgit check` finds no conflicts. Four pairs touch disjoint tensors, and the two shifts share a bias vector but commute to $1.2\times10^{-7}$.
-2. **One patch fails only in context.** In the merged build, the warm-fur shift moves fur warmth by +0.92 SD where its test asks for at least 1.0, and it pushes the background by −0.55 SD against a guard of ±0.3. Alone (§4.2), the same patch gave +1.25 and −0.13 SD and would have passed. Combined with the background shift, the generator's nonlinearity couples the two. A test run on the patch by itself cannot see this.
-3. **The warm-fur merge is reverted.** `git revert` produces hash `b563872899972665`, identical to building {bright background, prune2, eye gate} directly. In that context the eye gate's median hue is 197.0°, just outside its band: because the circuit works on part of the cats, its median moves with context (229.8° after the merge, 197.0° after the revert, 224.6° at HEAD).
-4. **Two lock branches merge without a textual conflict, and `wpgit check` reports three semantic conflicts.**
-   - **Type I.** The two locks' subspaces overlap (principal-angle cosines 0.547 and 0.148), so their order changes the model ($\max|\Delta W|$ 0.75, output MAE 0.129). The resolution Gram–Schmidt-orthogonalises the background subspace against the fur-lightness subspace. It recomputes the background targets from the in-span point that satisfies all four original constraints, moving them from (2.0, 0.0) to (2.345, 1.271). The locks then commute to $2.4\times10^{-7}$.
-   - **Type II.** The background lock freezes the background that the bright-background shift moves. Whichever runs last wins. No algebra makes both true, so a commit records a decision: the lock supersedes the shift. The third conflict, the fur-lightness lock against the same shift, disappears with it.
-5. **HEAD passes every test** (hash `0606c0c758456bef`):
-
-| test at HEAD (bound) | with one-direction locks (2018 style) | with rank-2 subspace locks |
-|---|---|---|
-| fur-lightness lock: variance ratio (≤ 0.3) | 0.708 FAIL | **0.101** PASS |
-| background lock: variance ratio (≤ 0.3) | 0.677 FAIL | **0.114** PASS |
-| eye hue (200–250°) | 221.9° PASS | 224.6° PASS |
-| `prune2` / `eye_gate` rest-of-image change (≤ 0.015) | 0.007 / 0.003 PASS | 0.003 / 0.000 PASS |
-| **all tests** | FAIL | **PASS** |
-
-The same script with one-direction locks gives the left column. That history fails, and the tests are what say so. With one-direction locks, the generalised resolution reproduces the original one-direction run line for line.
-
-## 5. When the base model changes: rebasing
-
-Downstream users patch a model, and then its maintainers release a new version. In software this is a dependency upgrade: local patches are rebased onto the new upstream and the tests decide what still works.
-
-We trained CatGAN-26 further, resuming from step 30,000 with the generator, discriminator, moving average and both optimiser states. We exported it at +500, +1,000, +2,000 and +4,000 steps exactly as the original was exported. Then `wpgit rebase` moved the repository of §4.3 onto each version, and the same tests ran.
-
-| upstream | weights changed | output change (MAE, same latents) | `rebase`: stale patches | `prune2` / `eye_gate` rest change (≤ 0.015) | eye hue | fur / background lock (≤ 0.3) | all tests |
-|---|---|---|---|---|---|---|---|
-| original | — | — | — | 0.003 / 0.000 | 224.6° | 0.101 / 0.114 | pass |
-| +500 steps | 3.7% | 0.045 | `prune2`, `eye_gate` | 0.006 / 0.005 | 227.0° | 0.104 / 0.109 | **pass** |
-| +1,000 | 6.5% | 0.067 | both | 0.009 / 0.009 | 229.1° | 0.112 / 0.127 | **pass** |
-| +2,000 | 11.1% | 0.094 | both | **0.024 / 0.024** | 227.8° | 0.154 / 0.134 | fail |
-| +4,000 | 17.9% | 0.127 | both | **0.025 / 0.025** | 225.4° | 0.161 / 0.294 | fail |
+*Table 9. Rebasing the cat repository onto further-trained versions of CatGAN-26.*
 
 - **Patches written against an interface survive; patches written against an implementation do not.**
-  - The locks act on the latent, the model's input, which the update leaves alone. They hold through 4,000 steps, although the background lock is at 0.294 by then, just inside its bound.
-  - `prune2` and `eye_gate` act on two specific hidden channels. `prune2` stores the difference that zeroed those channels *on the old weights*, so on new weights it leaves residue in the "freed" slots, which the gate then writes into. From 2,000 steps on, the collateral change breaks its bound. The eye colour itself still works throughout (225–229°): what breaks is the promise not to touch the rest of the image.
-- **The stale-context check fires first.** `wpgit rebase` marks both channel patches stale at every step: their target entries moved by 2.8% after 500 steps and 20% after 4,000. That happens before any test fails. The check warns that a patch no longer means what it did; the tests decide whether it still meets its specification.
-- **Regenerating instead of porting.** Patches are build products of fitting scripts, so the alternative to porting them is to rebuild them from source on the new base. On the +4,000 checkpoint, re-running the fitting scripts and the git story took 11 minutes with no manual changes.
-  - The specification-driven choices adapted on their own: the background lock now needs rank 4, and the gate threshold drops to the 0.97 quantile.
-  - The regenerated `prune2` and `eye_gate` pass in isolation and after the revert (hue 201.9°, rest change 0.006 and 0.001). The locks pass at HEAD (0.127, 0.084).
-  - At HEAD, though, the regenerated gate stops firing (hue 26°). Its threshold sits one step from a cliff in its sweep (held-out hue 210° at the 0.97 quantile, 67° at 0.98), and locking every cat to light fur shifts the detector's scores past it.
+  - The locks act on the latent, the model's input, and hold through 4,000 steps.
+  - `prune2` stores a difference computed on the old weights, so on new weights it leaves residue in the "freed" channels, which the gate then writes into.
+- **The stale-context check fires before any test fails:** at +500 steps, against the tests' first failure at +2,000.
+- **Regenerating instead of porting.** Re-running the fitting scripts on the +4,000 checkpoint took 11 minutes with no manual changes. It restores each patch's guarantees, but at HEAD the regenerated gate stops firing (hue 26°). Its threshold sits one step from a cliff, and locking every cat to light fur pushes the detector's scores past it. Only an in-context test sees this.
 
-Neither porting nor regenerating yields a passing repository after 4,000 steps without further work. They fail differently: porting loses the channel patches' guarantees, while regenerating restores them but exposes an interaction between new patches. Both failures are visible only to in-context tests.
+The same lesson applies to §4's circuits. They read and write specific hidden channels, so they are implementation patches. After an upstream update they must be refitted, not ported, and then retested in context.
 
-## 6. When the patch is a fine-tune: merging deltas
+## 6. Old checkpoints as legacy code
 
-Most changes to real models are fine-tunes. We stored two fine-tunes as dense delta patches and merged them, using a second model trained for this paper.
+The toolkit started on checkpoints the first author trained in 2017–2020, in Keras 2. They have no tests or documentation, and in places they have bugs:
+- TinySR-18A and TinySR-18B (2× super-samplers);
+- Anime-DCGAN;
+- Cat-GAN and PCA-GAN;
+- Recycle-Bot (a trash classifier).
 
-**TinySR-26** is a 276,732-parameter 2× super-sampler; a 292,320-parameter 4× version is used for figures. It has six residual blocks of 48 channels without normalisation [23], a sub-pixel convolution upsampler [22] and a global bicubic skip. It was trained for 30,000 steps on AFHQ crops degraded by a mix of bicubic, bilinear, box and nearest downsampling. On held-out AFHQ photos it beats bicubic interpolation by +3.0 dB when the low-resolution input was made by nearest-neighbour sampling, and by +0.4 dB at 2× (+1.0 dB at 4×) when it was made by bicubic downsampling.
+The public MobileNetV2 is treated the same way.
 
-![Figure 4](figures/fig_pipeline_128_to_512.png)
+**Reading weights without running them.**
+- **A defect.** A static audit finds TinySR-18A's positive output bias (0.090, 0.046, 0.034), the defect repaired in §4.3.
+- **Training history.**
+  - Recycle-Bot's BatchNorm running variance (median 0.8347 ≈ $0.99^{18}$) gives its training length: 18 steps, which the notebook confirms.
+  - MobileNetV2's first BatchNorm mean equals its filter sums times the training set's mean colour, since Conv1 has no bias. Solving for the colour recovers the ImageNet mean to within 1.4 levels.
+- **Shared ancestry.** Cat-GAN and PCA-GAN share an architecture and a dataset, but their tensors correlate near zero. They share no root commit, so no patch transfers between them until their units are aligned [14].
 
-*Figure 4. A 128-px CatGAN-26 sample (left, pixel-replicated), upscaled to 512 px by bicubic interpolation (middle) and by TinySR-26 4× (right).*
-
-**Two branches.** From the same base (hash `8cb6601c1b449ffc`) we fine-tuned two branches for 3,000 steps each:
-- **bicubic**, trained on bicubic-downsampled inputs only, whose claim is to be better on bicubic inputs;
-- **noisy**, trained on mixed kernels plus Gaussian noise (σ up to 8/255), whose claim is to be better on noisy inputs.
-
-Each is stored as a weight delta. Merging is addition, so it commutes exactly (the order difference is $1.5\times10^{-8}$, float rounding). The deltas are nearly orthogonal (cosine 0.088) and similar in size (16–17% of the weight norm).
-
-PSNR change against the base on 180 held-out AFHQ photos (2×, 256 → 512 px):
-
-| model | bicubic inputs (bicubic's claim) | noisy inputs (noisy's claim) | nearest inputs (regression guard) |
-|---|---|---|---|
-| base (dB) | 32.53 | 26.89 | 31.12 |
-| branch: bicubic | **+0.23** | −0.47 | **−4.88** |
-| branch: noisy | −0.20 | **+3.26** | −1.01 |
-| merge: base + Δbicubic + Δnoisy | −0.03 | +2.56 | −4.06 |
-| merge: average of the two | +0.11 | +1.89 | −3.05 |
-
-Each branch meets its own claim and fails the regression guard. The merge keeps only part of the gains, and nothing in git or in the weights warns: the merge is clean, order-independent and between nearly orthogonal deltas. **Orthogonal in weight space is not independent in function.**
-
-**Resolving the conflict.** We wrote the merge's specification as a test: both claims hold (gain > 0 on bicubic and on noisy inputs) and no test falls more than 0.1 dB below the base. We then tried the resolutions a weight-space toolkit offers, choosing on 120 separate fitting images.
-
-1. **Weighted merges** (task arithmetic [3]), $W_0 + a\,\Delta_{\text{bicubic}} + b\,\Delta_{\text{noisy}}$, for $a, b \in \{0, 0.25, 0.5, 0.75, 1\}$. **None of the 25 meets the specification.** Any weighting that keeps the noisy gain costs at least 0.95 dB on nearest inputs, and adding a quarter of $\Delta_{\text{bicubic}}$ already costs 1.8–2.5 dB.
-2. **Blame, then cherry-pick hunks.** Applying one layer group of a delta at a time shows where the regression comes from:
-
-   | nearest-input change (dB) | head | block 0 | 1 | 2 | 3 | 4 | 5 | tail | up |
-   |---|---|---|---|---|---|---|---|---|---|
-   | $\Delta_{\text{bicubic}}$ alone | −0.09 | −1.28 | −0.69 | −0.48 | −2.35 | **−3.11** | −0.65 | −0.14 | −0.54 |
-   | $\Delta_{\text{noisy}}$ alone | −0.41 | −1.87 | **−2.02** | −1.12 | −0.15 | +0.06 | −0.03 | −0.14 | −0.30 |
-
-   The regression is spread over the network. Dropping the worst groups until it is within 0.1 dB removes eight of nine groups of $\Delta_{\text{bicubic}}$, and with them its gain. For $\Delta_{\text{noisy}}$, the two groups left over are worse than nothing (−4.16 dB on its own claim). **A fine-tune delta only works whole**: the partial revert that is routine for code breaks it.
-3. **A resolution commit:** 1,000 more steps of fine-tuning from the merged model on all three input types, stored as one more delta. It repairs most of the regression (−0.22 dB on nearest inputs) but loses the bicubic gain (−0.19 dB).
-
-The only candidate that meets the specification is to retrain once on the union of both branches' objectives, 3,000 steps from the base: +0.03, +3.19 and +0.08 dB. That is the equivalent of squashing the branches and redoing the work against the combined specification. Even then only +0.03 dB of the bicubic branch's +0.23 dB survives: at this size, specialising for bicubic inputs and staying robust to nearest inputs compete. **For fine-tunes, merging is cheap and the tests are what matter.**
-
-## 7. Legacy checkpoints as legacy code
-
-The toolkit started life on checkpoints the first author trained in 2017–2020 as an undergraduate, in Keras 2. They have no tests, no documentation of their training runs and, in places, bugs. They are legacy code, and the questions are the ones legacy code raises: what does it do, can we change it safely, and can we read its history from what is left?
-
-| model | task | parameters |
-|---|---|---|
-| TinySR-18A, TinySR-18B | 2× super-sampling GANs ("DLSS" in the original repository, unrelated to NVIDIA's) | 317,059; 597,379 |
-| Anime-DCGAN | 64×64 anime faces | 252,931 |
-| Cat-GAN, PCA-GAN | 64×64 cat faces from 512 PCA coefficients | 587,715 each |
-| Recycle-Bot | trash vs recycling classifier | 741,121 |
-| MobileNetV2 [16] (public) | ImageNet classifier | 3,538,984 |
-
-### 7.1 Reading weights without running them
-
-**A static audit** (`extract_and_audit.py`) reads tensors and configuration only.
-- For TinySR-18A it finds a positive output bias (0.090, 0.046, 0.034) that lifts pure black. Neither audited model has dead or duplicate channels.
-- Effective rank is not unused capacity: PCA-GAN's 512×512 dense layer scores 216.5, against about 369 for a random matrix of that size. That is a concentrated spectrum, not a rank-deficient one.
-
-**Blind predictions** were recorded from weights and configuration alone before any model was run (Recycle-Bot):
-- **Confirmed:** the two dense layers have only Dropout between them, so the 590K-parameter head collapses to one 2,304-weight vector.
-- **Confirmed:** every BatchNorm scale is positive and the trunk uses only valid padding and max-pooling, so all five BatchNorms fold exactly.
-- **Refuted:** a spatial-attention map read from the collapsed head did not predict occlusion sensitivity (correlation −0.21).
-
-**Training history in the weights.**
-- **Recycle-Bot's step count.** Keras initialises BatchNorm running variance at 1 and decays it by 0.99 per step, so a barely-moved statistic sits near $0.99^n$. The first layer's median running variance of 0.8347 gives $n \approx 18$, and the training notebook confirms 18 steps: 63 images, batch 25, early stopping at epoch 6.
-- **MobileNetV2's training data.** Conv1 has no bias, so `bn_Conv1`'s running mean is its 32 filter sums times the training set's mean colour. Solving that system ($R^2 = 1.000$) gives (122.3, 116.2, 102.9), within 1.4 levels of the published ImageNet mean.
-- **MobileNetV2's label hierarchy.** For the 118 dog breeds, 98% of each breed's five nearest classifier vectors are also dogs (12% by chance).
-
-**Two repositories with no common ancestor.** Cat-GAN and PCA-GAN share an architecture, an input and a dataset, and could plausibly be two checkpoints of one run. The weights say otherwise: every tensor pair correlates near zero (−0.004 to +0.025), and same-index filters have mean |cos| 0.019, the level of random vectors. In version-control terms they share no root commit, so no patch or merge transfers between them until their units are aligned [14].
-
-### 7.2 A hotfix, and the regression gate that stops it
-
-The audit's finding, a positive bias lifting pure black, invited a hotfix. The first script (`exp2_tinysr18_patch_v1.py`) made two hand-written edits with no tests: it zeroed the output bias and boosted the high-frequency part of the last two kernels by 1.18× and 1.25×. It cut the black lift from +8.40 to +3.29 RGB, and lost 2.67 dB on smooth gradients.
-
-The harness written in response (`exp2b`) tests itself first, on a stand-in network with a planted colour defect: it recovers the inverse to within 0.021 per entry. It then fits candidate folds on a calibration split and gates them on held-out images. A patch must lose at most 0.10 dB and 0.005 SSIM on five regression images, gain PSNR on seven edge cases, and lower their black floor below the base's 8.90 RGB.
-
-| variant (TinySR-18A) | regression ΔPSNR | edge ΔPSNR | black floor (RGB) | weights changed | gate |
-|---|---|---|---|---|---|
-| v1 hotfix (bias zero + boost) | −3.50 | −1.48 | 4.63 | 107,203 | FAIL (regression) |
-| v1, bias only | −3.51 | −1.62 | 4.40 | 3 | FAIL (regression) |
-| `color_fold` (12 numbers) | **+2.93** | +1.81 | 13.51 | 4,803 | FAIL (black floor rises) |
-| `color_fold_black` (dark pixels ×256) | −8.98 | −6.10 | **3.85** | 4,803 | FAIL (regression) |
-| `sharpen_fold` | +0.04 | −0.00 | 9.00 | 4,800 | FAIL (no edge gain) |
-
-- **The gate blocks the hotfix.** Zeroing the bias alone accounts for the whole loss: the bias was compensating for features that are too dark, and the hotfix removed the compensation.
-- **The gate also diagnoses the defect.** No affine output fold fixes both problems. The best one recovers +2.93 dB but raises the black floor, and anchoring black destroys mid-tones (Appendix B gives the trade-off curve). TinySR-18A's tone error is nonlinear, and no output-layer patch can express it.
-- **A rewrite has nothing left to fix.** TinySR-26 (§6) has 13% fewer parameters and beats TinySR-18A by 6–15 dB on every test set. The best affine colour correction for it is the identity (+0.0007 dB, against +2.26 dB for TinySR-18A). On healthy models, useful patches add behaviour rather than repair it.
-
-### 7.3 Exact refactors and deployment fixes
+**Exact refactors.**
 
 | model | refactor | parameters | max output difference |
 |---|---|---|---|
-| Recycle-Bot | fold 5 BatchNorms; collapse the linear–Dropout–linear head | 741,121 → 151,809 (−80%) | 2.9 × 10⁻⁶ |
-| MobileNetV2 | fold all 52 BatchNorms | 3,538,984 → 3,487,816 | 5.5 × 10⁻⁵ (logits) |
-| MobileNetV2 | fold uint8 preprocessing (x/127.5 − 1) into Conv1, with padding value 127.5 | unchanged | 2.5 × 10⁻⁵ |
-| MobileNetV2 | fold an RGB → BGR swap into Conv1 | unchanged | 2.3 × 10⁻⁵ |
-| Anime-DCGAN | exact mirror / 90° rotation by kernel and layout permutation | unchanged | 1.3 × 10⁻⁶ / 1.5 × 10⁻⁶ |
+| Recycle-Bot | fold 5 BatchNorms; collapse a linear–Dropout–linear head | 741,121 → 151,809 | 2.9 × 10⁻⁶ |
+| MobileNetV2 | fold all 52 BatchNorms | 3,538,984 → 3,487,816 | 5.5 × 10⁻⁵ (logits) |
+| MobileNetV2 | fold uint8 preprocessing into Conv1, with a padding value of 127.5 | unchanged | 2.5 × 10⁻⁵ |
+| Anime-DCGAN | exact mirror and 90° rotation by kernel permutation | unchanged | 1.3 × 10⁻⁶ |
 
-**The padding constant.** Folding the preprocessing into Conv1 is exact in the interior and wrong at the border (logit error 1.6), because zero padding in $[-1,1]$ space is 127.5 in raw pixel space. Once the padding value is part of the patch, the fold is exact. On raw uint8 input, agreement with the correctly preprocessed model rises from 0% to 100%; for BGR input it rises from 70% to 100%.
+*Table 10. Exact refactors. Folding the preprocessing is exact only once the padding value is part of the patch: zero padding in [−1, 1] space is 127.5 in raw pixels.*
 
-### 7.4 Stitching related checkpoints
+**Stitching.** TinySR-18A and TinySR-18B have different widths and kernel sizes, yet their hidden layers align (linear CKA 0.68–0.86 [11]). A fitted 1×1 map folded between the front of one and the back of the other gives an exact hybrid with no adapter layers [12, 13]. One hybrid beats both parents on natural images (23.71 against 22.75 and 22.31 dB).
 
-TinySR-18A and TinySR-18B share an interface (128 → 256 px RGB) and nothing else: 5×5 kernels and 64 channels against 3×3 and 128.
-- **Similar representations.** Hidden layers at matching resolutions align strongly (linear CKA 0.68–0.86, against 0.00 for a shuffled control).
-- **Non-transferable patches.** Each model's colour fix still fails on the other. A's own fold lifts it from 22.75 to 25.02 dB, and B's fold drops it to 21.90 dB. A calibration patch encodes one run's drift, which is why patches pin a hash.
-- **Exact stitches.** Folding a fitted 1×1 map between the front of one model and the back of the other gives hybrids with no adapter layers. One, the front of A feeding the back of B, scores 23.71 dB on natural images and 20.11 dB on sprites with fewer parameters than either parent (parents 22.75/19.45 and 22.31/19.57 dB). On the legacy test image it loses to B (20.97 vs 23.88).
+**Where the circuits came from.** The latent operators, the gated eye circuit and the git workflow were first built for Anime-DCGAN (252,931 parameters, 2018). They ran on CatGAN-26, which is 32× larger, unchanged apart from two backward-compatible parameters. A closed-form "anime face" class appended to MobileNetV2 [15] serves as a test oracle for that generator's edits. It recognises 100% of held-out generated faces with 0% false positives.
 
-### 7.5 Where the toolkit came from
+## 7. Discussion
 
-The latent operators, the circuit wiring and the git workflow were first built for Anime-DCGAN, a 252,931-parameter generator from 2018. CatGAN-26 is 32× larger and was trained with 2026 practice. Its patch operators and `wpgit` ran on it unchanged, apart from two backward-compatible parameters (layer names, target colour) and a test-domain hook. The 2018 repository's results were re-checked to be bit-identical after those changes.
+### 7.1 What a trained model becomes when it can be patched
 
-| | Anime-DCGAN (2018) | CatGAN-26 (2026) |
-|---|---|---|
-| parameters | 252,931 | 8,133,283 |
-| latent attributes: held-out $R^2$ of one direction | 0.66–0.90 (one attribute 0.09) | 0.32–0.66 |
-| one-direction lock: variance ratio | 0.06–0.26 (five of six attributes) | 0.41–0.83 (three of five); about 2 for the other two |
-| eye circuit: hue, and collateral change vs ungated fold | 183° → 296°, 7× lower | 43° → 214°, 23× lower |
-| per-image eye success | — | 40% |
-| git story: conflicts found / all tests at HEAD | 2 / pass | 3 / pass (with subspace locks) |
+Gradient descent and patching write to different parts of a network. Gradient descent writes **values**, the weights of a fixed graph, toward lower loss on its data. The patches in §4 write **structure**: new channels, carriers, gates, guards, branches and switches, built from identities that are exact on every input. That gives them properties training does not have:
+- **New structure.** A coordinate wire, a reference path, a second and third network, a new unit.
+- **Exact invariance of chosen parts.** The other half of the image; every input on which an exception is off.
+- **Bounds on every input.** The guard.
+- **Discrete decisions.** Switches with no blending between experts.
+- **Behaviour without data for it.** No odd-eyed cat was needed.
 
-![Figure 5](figures/fig_2018_vs_2026_generators.png)
+**Is this a starting point?** In a specific sense, yes. Training produces features; patches compose new behaviour on top of them, as programs build on a library. Every patch in §4 reuses learned computation:
+- the iris gate reads learned features;
+- the guard caps the learned output;
+- the router compares the experts' own outputs;
+- the exception reads the classifier's penultimate features.
 
-*Figure 5. Anime-DCGAN samples (64 px, 2018, top) and CatGAN-26 samples (128 px, 2026, bottom).*
+Patches cannot create features the network lacks. The guard bounds TinySR-18A's tone error; only the fine-tune learns to correct it. A trained model therefore becomes something like a compiled library that can still be extended after release:
+- extended, with new capabilities;
+- constrained, with bounds and invariances;
+- combined, with routing;
+- fixed, with local exceptions;
+- maintained, with tests and rebases (§5).
 
-The tools transferred; the patches' quality did not transfer automatically. On the 2026 model the latent is less linear, so one-direction locks fail; the iris circuit works on part of the cats; and two shifts that pass alone interact once merged. In each case the in-context tests, not the merge machinery, reported it.
+**What this unlocks next.**
+- *Verified detectors.* The weak part of every circuit is a fitted detector (42–48% of irises). Verifiers [41] and provable repair [39] could certify the detectors, as the identities already certify the wiring.
+- *Topology in the patch format.* Grow, insert and branch operators would let `wpgit` version, test and rebase §4's patches as it does the fixed-architecture ones.
+- *Larger models.* The identities need piecewise-linear activations. The GELU and SwiGLU of most language models are not piecewise linear, so exact circuits there must be added beside them, as ReLU units in grown room. The union and exception patterns need only a linear readout.
+- *Agents writing weights in context.* Takehi et al. [1] show LLMs writing weights directly. A shared instruction set and tests would let such edits be checked and kept.
 
-### 7.6 A patch that adds a test oracle, and one that does not compress
+### 7.2 The human–agent loop, proposal by proposal
 
-- **An oracle by patch.** A shrunk Fisher discriminant, fitted on 24 generated anime faces against 146 negative crops, is appended to MobileNetV2 as class 1000, "anime face", in the spirit of imprinting [15].
-  - It recognises 100% of held-out generated faces and a real anime frame, with 0% false positives on held-out negatives, whose original labels are unchanged.
-  - Used as an oracle for Anime-DCGAN's patches, it accepts every edit (mirror, rotation, styles, warm hair, magenta eyes) and rejects random weights (6%).
-- **Low-rank truncation of MobileNetV2's classifier fails.** 814 of 1,000 singular directions are needed for 99% of the energy. Rank 256 keeps the original top-1 class on 80% of inputs, and rank 512 on 92%. A concentrated spectrum is not a compressible one.
-
-## 8. Discussion
-
-### 8.1 What only the tests caught
-
-Across the studies, git never reported a problem, and the merges were always clean. Every problem below was found by an in-context test, by the merge check or by the rebase's context check:
-
-| what happened | where | caught by |
-|---|---|---|
-| a shift that passes alone fails once merged with another shift | §4.3 | in-context test |
-| two locks whose order changes the model | §4.3 | `wpgit check` (Type I) |
-| a lock and a shift that contradict each other | §4.3 | `wpgit check` (Type II) |
-| one-direction locks that do not lock | §4.2–4.3 | in-context test, then a better patch |
-| an eye circuit whose median hue moves with context (229.8° → 197.0° → 224.6°) | §4.3 | in-context test |
-| channel patches that no longer mean what they did on an updated model | §5 | `wpgit rebase` context check, at +500 steps |
-| the same patches breaking their collateral bound | §5 | in-context test, at +2,000 steps |
-| a regenerated gate that stops firing under regenerated locks | §5 | in-context test |
-| a fine-tune merge that breaks a regression guard, with no weight-space fix | §6 | regression test |
-| a hotfix that costs 3.5 dB | §7.2 | regression gate |
-
-### 8.2 The human–agent loop, proposal by proposal
-
-Each operator in §3 is linear algebra that a skilled engineer could write by hand. The practical bottleneck in maintaining a model through patches is the loop around them:
+The bottleneck in maintaining a model through patches is not the linear algebra. It is the loop around it:
 1. propose an edit;
-2. find out what it breaks in context;
-3. decide whether to reformulate the patch, resolve a conflict or reject the change.
+2. find out what it breaks;
+3. decide whether to change the patch, resolve a conflict or reject the change.
 
-In this study the first author set the goals and approved the test specifications. An AI coding agent (Claude Opus 5.5) wrote the fitting code, proposed candidate patches and ran `wpgit`; the first, untested scripts in §7.2 predate this workflow. §8.1 lists what the checks caught. The table below follows each proposal to its resolution:
+The person set goals and specifications. The agent wrote the fitting and compiling code, proposed patches and ran the tests; the first, untested TinySR-18A hotfix predates this workflow. Every row below is a proposal that ran without error and looked reasonable when written; a measurement stopped it.
 
 | proposal | what caught it | outcome | resolution |
 |---|---|---|---|
-| hotfix to TinySR-18A: zero the output bias, boost high frequencies 1.18× and 1.25× (§7.2) | regression gate | black lift +8.40 → +3.29 RGB, but −3.50 dB on held-out photos | an ablation showed zeroing the bias alone costs −3.51 dB; rejected |
-| four exact output folds as replacements (§7.2) | regression gate | 0 of 4 pass; the best gains +2.93 dB but raises the black floor 8.90 → 13.51 RGB | a six-point dark-weight sweep shows the tone error is nonlinear; no fold shipped |
-| CatGAN-26 trained with a spectral-normalised discriminator (§4.1) | training diagnostics | the discriminator scored real cats, generated cats, noise and a blank image all at −0.0024 ± 0.00003 within 2,000 steps | no spectral norm: a lazy R1 penalty and He initialisation; trained 30,000 steps |
-| latent shifts orthogonalised against all other attributes (§4.2) | on-target measurement | fur warmth erased (−0.01 SD), because warmth and saturation nearly coincide (cos 0.951) | keep near-duplicates (\|cos\| > 0.9); warmth restored to +1.25 SD |
-| iris-gate threshold set so expected false positives equal iris area (§4.2) | the patch's own test, on held-out cats | irises not blue (hue 59°; target 200–250°) | choose the strictest quantile that passes on fitting images (0.98) |
-| one-direction latent locks on CatGAN-26 (§4.2–4.3) | `wpgit test` at HEAD | variance ratios 0.708 and 0.677 against a bound of 0.3 | bound kept; rank-2 active-subspace locks pass at 0.101 and 0.114 |
-| two fine-tune branches merged as deltas, then 29 resolutions short of retraining: 25 weightings, two layer cherry-picks and their merge, a 1,000-step repair (§6) | the merge's specification test | none passes: each loses a claimed gain or breaks the nearest-input guard | only joint retraining passes (+0.03, +3.19, +0.08 dB) |
-| porting the cat repository to CatGAN-26 trained further, vs regenerating it (§5) | `wpgit rebase`, then `wpgit test` | ported channel patches stale from +500 steps and failing from +2,000; regenerated patches pass alone but the gate stops firing at HEAD (26°) | regeneration works with no manual changes; in-context tests remain necessary |
+| TinySR-18A hotfix: zero the output bias, boost high frequencies | regression gate | −3.50 dB | zeroing the bias alone costs −3.51 dB; rejected |
+| four exact output folds | regression gate | 0 of 4 pass | the tone error is nonlinear; rewired instead (§4.3) |
+| guard with a cap at $R + \delta$ everywhere | looking at the images | thin bright lines dimmed | dark-only guard: edge +2.39 against +2.02 dB |
+| disable the guard with $\delta = 10^6$ to check the grown network | the identity check itself | float32 cancellation, error 0.015 | big-M constants sized to the signal ($\delta = 10$): error 2.5×10⁻⁶ |
+| first run of the guard experiment | base numbers ≠ v1.0 (black floor 10.85 against 8.90) | wrong downsampling filter | v1.0's gate uses nearest-neighbour inputs; rerun |
+| free one channel per layer for the odd-eye wire | change outside the eyes | 3.97 RGB levels | grow the room instead: 0.24 |
+| median iris hue as the odd-eye metric | inconsistent with per-image counts | median 92° with 42% of eyes in band | report the share of eyes in band |
+| route the union by input statistics | router accuracy, then the spec test | 81%; −0.96 dB on nearest inputs | self-consistency router: 540 of 540 |
+| quick fine-tune on the classifier's errors | collateral on non-cats | 711 of 1,000 animals become cats | the exception unit (one change) |
+| CatGAN-26 with a spectral-normalised discriminator | training diagnostics | all inputs scored −0.0024 ± 0.00003 | R1 penalty and He initialisation |
+| latent shifts orthogonalised against all attributes | on-target measurement | fur warmth erased (cos 0.951 with saturation) | keep near-duplicates |
+| one-direction latent locks | `wpgit test` at HEAD | 0.708, 0.677 against 0.3 | bound kept; rank-2 subspace locks |
+| 29 weight-space resolutions of the fine-tune merge | the merge's specification test | none passes | joint retraining (v1.0); a routed union (§4.4) |
+| porting the cat repository after 4,000 more training steps | `wpgit rebase`, then `wpgit test` | channel patches stale, then failing | regenerate, then retest in context |
 
-Every proposal in the table ran without error and looked reasonable when it was written. What stopped each one was a measurement, not a reviewer's intuition. That is the case for the loop: agents write algebraic operators, and reproducible weight-space tests accept or reject them.
+*Table 11. What the agent proposed, and what stopped it.*
 
-### 8.3 Lessons for weight-space tooling
+### 7.3 What gradient descent still does better
 
-1. **Test in context, always.** Patches that pass alone fail together, and the reverse.
-2. **Prefer patches written against interfaces.** Latent patches survived an upstream update that broke channel-level ones. When a patch must touch internals, it should record what it assumes, so a rebase can detect staleness. `sparse_add` lacked that, and `wpgit rebase` recovers it by comparing old and new weights.
-3. **Keep the specification and change the patch.** The locks went green through a better patch (rank 2), not a looser bound. A threshold that sits next to a cliff (§5) is a fragile patch even when it passes.
-4. **Prefer reviewable operators.** A 12-number colour fold or a 2-direction lock can be read in full. A dense fine-tune delta can only be reviewed by its tests, and it cannot be partially reverted.
-5. **Treat fitted patches as build products.** Keeping the fitting script with the patch makes regeneration possible. Regeneration then needs its own tests, because new patches create new interactions.
+- **Learning features.** With data in hand, a short fine-tune beat the TinySR-18A repair on every metric (Table 5). Patches compose behaviour from features the network already has.
+- **Compactness.** Joint retraining resolves the merge conflict at one network's size; the union needs three.
+- **Detectors.** Every circuit contains a fitted detector, and fitted detectors are imperfect: 42–48% of irises, blue streaks on fur, an exception unit that fires on 106 non-cats.
+- **Composition without tests.** Patches interact, merge silently into conflicts and go stale (§5). Gradient descent at least optimises everything jointly.
 
-### 8.4 The boundary of gradient-free patching
+The two are complementary. A fine-tune can be guarded, an exception can sit on a fine-tuned head, and a union can hold networks that were each trained well.
 
-**Inside**, with exact or near-exact results:
-- exact refactors: BatchNorm folding, head collapse, deployment fixes, symmetry, truncation;
-- affine recalibration when the defect is affine;
-- steering, and locking attributes the latent encodes linearly or in a low-rank nonlinear way;
-- channel reclamation with gated circuits;
-- stitching related models, and closed-form classifier heads.
+### 7.4 Limitations
 
-**Outside:**
-- nonlinear tone errors (§7.2);
-- attributes with almost no latent support (Anime-DCGAN's saturation, held-out $R^2$ 0.09; whether a subspace lock reaches it is untested);
-- transfer between checkpoints with no common ancestor (§7.1, §7.4);
-- resolving a behavioural conflict between fine-tunes (§6).
+- **Scale.** The models have 0.25M–8.1M parameters. The identities are exact at any size, but we have not tested circuits in large models or in transformers.
+- **Small and partly synthetic tests.** Generator attributes are pixel heuristics. The TinySR-18A gate uses 5 regression and 7 edge-case images, and its guard was calibrated on 9. Each 2026 model was trained once, with one seed.
+- **Topology patches are scripts.** §4's patches change layer widths and add layers. They are built and tested by their scripts but are not yet operators in the patch format, so `wpgit` cannot rebase them.
+- **Choices made after failures.** Several patches were changed after a test failed (Table 11). Every choice was made on fitting or calibration data, and the earlier versions are reported.
+- **The agent works through tools.** The agent wrote code that computes the patches; it did not write raw weights in its context window, as in [1]. The constants it wrote by hand (Table 3) are wiring, not learned values.
+- **Environment.** The synthetic sprite tests are drawn with Pillow, whose rasteriser changed between versions. All numbers come from the pinned environment (Appendix A).
 
-### 8.5 Limitations
+### 7.5 Lessons
 
-- **Scale.** The models span 253K–8.1M parameters. The primitives are dimension-agnostic linear algebra, but running `wpgit check` and in-context suites on billion-parameter language models is future work.
-- **Small and partly synthetic tests.** Generator attributes are pixel heuristics, checked by an ImageNet classifier. CatGAN-26's quality is judged in MobileNetV2 features rather than with Inception-based FID or people. The TinySR-18 gate uses 5 regression and 7 edge-case images.
-- **Single runs.** Each 2026 model was trained once, with one seed.
-- **Patch choices made after failures.** The cat repository's tests reuse the 2018 bounds, but two patch-side choices followed failures: the gate-threshold rule and the subspace locks. Both select on fitting data only, and the earlier versions are reported.
-- **Environment.** The synthetic sprite tests are drawn with Pillow, whose rasteriser changed between versions. All reported numbers come from the pinned release environment (Appendix A).
+1. **Grow when exactness matters, free when parameters matter.** Growing is exact (§3.2); freeing costs fidelity, and those costs add up.
+2. **Make logic exact and keep the learned parts small.** Exact wiring turns a fitted detector's mistakes into the only mistakes, and makes them visible.
+3. **Bound what you can compute.** A guard needs a reference inside the network; the reference path supplies one.
+4. **Route instead of averaging when objectives compete,** and let the experts check themselves.
+5. **Test in context, keep the specification and change the patch.** Every row of Table 11 was stopped by a measurement, and none by a looser bound.
 
-### 8.6 Outlook
+## 8. Conclusion
 
-The motivating scenario is automated maintenance: language-model agents proposing weight patches [1]. The workflow here is built for that. The agent proposes, and `wpgit` gates every proposal with tests written by people. Natural next steps:
-- `git bisect run python src/wpgit.py test .` to find a breaking patch in $O(\log N)$ builds;
-- semantic versioning for checkpoints, by whether a patch changes hidden representations;
-- patch formats that carry their own context, as source diffs do;
-- in-context suites for language models.
+A trained network does not have to be a sealed artefact. With a handful of exact identities of the activations it already uses, an LLM agent can rewire it after training:
+- carry a coordinate through ten layers, and AND it with a fitted detector;
+- give a model a view of its own input, and bound its output by it;
+- put competing networks side by side behind a self-checking switch;
+- add an exception that is exactly silent where it does not fire.
 
-## 9. Conclusion
-
-Weight edits can be managed like code. Stored as hash-pinned, self-testing text patches, they branch, merge, revert and rebase under ordinary git, and a small tool supplies what git cannot know: in-context tests, a semantic merge check and stale-patch detection. On a cat generator trained for this paper, a 15-commit history exercises all of it and ends with every test passing, after a better patch replaced one that failed. The most useful component throughout was the plainest one, a test run in the context of every other change. It caught interactions between patches, conflicts that git merged silently, patches gone stale under an updated model, and fine-tunes that merge cleanly and compose badly.
+Each patch is fitted in seconds to minutes from hundreds to a few thousand examples, and none is something gradient descent on the trained model would write. They do not replace training, which still learns the features and wins when data is plentiful. They add a layer on top of it, and that layer needs software engineering: tests run in context, merge checks and rebases.
 
 ## Author contributions and AI disclosure
 
-- **Voravee Upatising** trained the 2017–2020 checkpoints and conceived weight-space software engineering as a research direction. Voravee Upatising defined the questions and the scope of every experiment, chose which results to pursue, and wrote the drafts this paper builds on. Voravee Upatising is responsible for the content of the paper.
-- **Claude** (Anthropic; model Claude Opus 5.5), an AI system, wrote most of the code under Voravee Upatising's direction: the NumPy engine, `wpgit`, the experiment scripts and the training code for TinySR-26 and CatGAN-26. It also ran the experiments, analysed the results and drafted much of the text.
+- **Voravee Upatising** trained the 2017–2020 checkpoints and conceived weight-space software engineering as a research direction. Voravee Upatising directed the work: set the questions, the goals and the specifications of every experiment, chose which results to pursue, asked for the topology and patching experiments of §3–4, and is responsible for the content of the paper.
+- **Claude** (Anthropic; model Claude Opus 5.5), an AI system, is the agent the paper describes. Under Voravee Upatising's direction it wrote the code, including:
+  - the NumPy engine and `wpgit`;
+  - the experiment scripts;
+  - the training code for TinySR-26 and CatGAN-26;
+  - the circuit library.
+
+  It designed and compiled the patches of §4, ran the experiments, analysed the results and drafted much of the text.
 - Voravee Upatising lists Claude as a co-author to state its contribution plainly. Claude cannot take responsibility for the work in the way a human author can. Venues whose policies do not allow AI authors should read this paper as authored by Voravee Upatising, with Claude's contribution acknowledged here.
 
 ## References
@@ -622,35 +641,117 @@ Weight edits can be managed like code. Stored as hash-pinned, self-testing text 
 
 [34] R. Charakorn, E. Cetin, Y. Tang, R. T. Lange. Text-to-LoRA: Instant Transformer Adaption. ICML 2025, PMLR 267:7485–7514.
 
+[35] T. Chen, I. Goodfellow, J. Shlens. Net2Net: Accelerating Learning via Knowledge Transfer. ICLR 2016.
+
+[36] D. Lindner, J. Kramár, S. Farquhar, M. Rahtz, T. McGrath, V. Mikulik. Tracr: Compiled Transformers as a Laboratory for Interpretability. NeurIPS 2023.
+
+[37] G. Weiss, Y. Goldberg, E. Yahav. Thinking Like Transformers. ICML 2021.
+
+[38] N. Shazeer, A. Mirhoseini, K. Maziarz, A. Davis, Q. Le, G. Hinton, J. Dean. Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer. ICLR 2017.
+
+[39] M. Sotoudeh, A. V. Thakur. Provable Repair of Deep Neural Networks. PLDI 2021.
+
+[40] A. Sinitsin, V. Plokhotnyuk, D. Pyrkin, S. Popov, A. Babenko. Editable Neural Networks. ICLR 2020.
+
+[41] G. Katz, C. Barrett, D. L. Dill, K. Julian, M. J. Kochenderfer. Reluplex: An Efficient SMT Solver for Verifying Deep Neural Networks. CAV 2017.
+
+[42] R. Arora, A. Basu, P. Mianjy, A. Mukherjee. Understanding Deep Neural Networks with Rectified Linear Units. ICLR 2018.
+
 ## Appendix A: Reproducing the results
 
-Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (all versions). The code is MIT-licensed; model weights and figures are CC BY-NC 4.0 because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, e.g. `python src/exp3_anime_weightpatch.py`.
+Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (all versions). The code is MIT-licensed. Model weights and figures are CC BY-NC 4.0, because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, for example `python src/exp18_circuit_primitives.py`.
 
 **Environment.**
-- CPU experiments (§7 and the anime generator) use Python 3.9.12, NumPy 1.22.4, Pillow 9.0.1, h5py 3.6.0 and scikit-image 0.19.2. Pillow is pinned because it draws the synthetic sprite tests.
-- The 2026 models train and evaluate in PyTorch 2.8.0 with CUDA 12.6 on one RTX 3050 (8 GB), with comparisons in full fp32. Their weights are exported to `.npz` dicts and checked against the NumPy engine.
-- Third-party data (AFHQ, MobileNetV2 weights) is fetched by `scripts/download_data.py`. The CatGAN-26 weights are release assets, fetched by `scripts/fetch_models.py`.
+- **CPU experiments** (§6 and the anime generator) use Python 3.9.12, NumPy 1.22.4, Pillow 9.0.1, h5py 3.6.0 and scikit-image 0.19.2. Pillow is pinned because it draws the synthetic sprite tests.
+- **GPU experiments.** The 2026 models and the circuit experiments (§3–4) run in PyTorch 2.8.0 with CUDA 12.6 on one RTX 3050 (8 GB). They use the same NumPy, Pillow and scikit-image versions, and compare in full fp32, or fp64 where stated.
+- **Data and weights.** AFHQ and the MobileNetV2 weights are fetched by `scripts/download_data.py`, and the CatGAN-26 weights by `scripts/fetch_models.py`.
 
 | section | script(s) in `src/` | outputs in `results/` |
 |---|---|---|
-| Figure 1 | `make_figure1.py` | `figure1/` |
-| §4.1 | `exp11_catgan26.py`, `exp12_modern_eval.py` | `exp11_out/`, `exp12_out/` |
-| §4.2 | `cat_domain.py`, `exp13_catgan26_patches.py`, `exp15_subspace_locks.py` | `exp13_out/`, `exp15_out/` |
-| §4.3 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat` for one-direction locks) | `exp5_cat_subspace_out/`, `exp5_cat_out/` (transcripts, `weightrepo.bundle`) |
-| §5 | `exp17_rebase.py` | `exp17_out/` |
-| §6 | `exp10_tinysr26.py`, `exp14_tinysr26_branches.py`, `exp16_merge_resolution.py` | `exp10_out/`, `exp14_out/`, `exp16_out/` |
-| §7.1 | `extract_and_audit.py`, `exp7_blind_audit.py`, `exp7b_recycle_bot.py`, `exp8_mobilenet.py` | `audit/`, `exp7_out/`, `exp8_out/` |
-| §7.2 | `exp2_tinysr18_patch_v1.py`, `exp2b_tinysr18_weightpatch.py`, `exp12_modern_eval.py A` | `exp2_out/`, `exp2b_selftest/`, `exp2b_out/`, `exp12_out/` |
-| §7.3 | `exp7b_recycle_bot.py`, `exp8_mobilenet.py`, `exp7d_anime_styles.py` | `exp7_out/`, `exp8_out/` |
-| §7.4 | `exp6_tinysr18_pair_transfer.py --lr-filter nearest` | `exp6_out/` |
-| §7.5 | `exp3_anime_weightpatch.py`, `exp4_anime_eye_circuit.py`, `exp5_git_demo.py` | `exp3_out/`, `exp4_out/`, `exp5_out/` |
-| §7.6 | `exp8_mobilenet.py`, `exp8b_oracle.py` | `exp8_out/` |
+| §3.1 | `circuits.py`, `exp18_circuit_primitives.py` | `exp18_out/` |
+| §3.2 | `exp19_free_capacity.py` | `exp19_out/` |
+| Figure 1, §4.2 | `exp20_odd_eyes.py` (and `exp13_catgan26_patches.py` for the blue-eye gate) | `exp20_out/`, `exp13_out/` |
+| §4.1 | `exp11_catgan26.py`, `exp12_modern_eval.py`, `exp10_tinysr26.py` | `exp11_out/`, `exp12_out/`, `exp10_out/` |
+| §4.3 | `exp2b_tinysr18_weightpatch.py --lr-filter nearest` (v1.0 patches), `exp21_guarded_sr.py` | `exp2b_out/`, `exp21_out/` |
+| §4.4 | `exp14_tinysr26_branches.py`, `exp16_merge_resolution.py`, `exp22_union_router.py` | `exp14_out/`, `exp16_out/`, `exp22_out/` |
+| §4.5 | `exp23_exception_patch.py` | `exp23_out/` |
+| §5.1 | `cat_domain.py`, `exp13_catgan26_patches.py`, `exp15_subspace_locks.py` | `exp13_out/`, `exp15_out/` |
+| §5.2, Figure 3 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat`), `make_figure1.py` | `exp5_cat_subspace_out/`, `exp5_cat_out/`, `figure1/` |
+| §5.3 | `exp17_rebase.py` | `exp17_out/` |
+| §6 | `extract_and_audit.py`, `exp7_blind_audit.py`, `exp7b_recycle_bot.py`, `exp8_mobilenet.py`, `exp8b_oracle.py`, `exp6_tinysr18_pair_transfer.py`, `exp3_anime_weightpatch.py`, `exp4_anime_eye_circuit.py`, `exp5_git_demo.py` | `audit/`, `exp7_out/`, `exp8_out/`, `exp6_out/`, `exp3_out/`, `exp4_out/`, `exp5_out/` |
 
 Base hashes: CatGAN-26 `be2b16ff52fc4021`, TinySR-26 2× `8cb6601c1b449ffc`, Anime-DCGAN `145ec232ed8a91e5`, TinySR-18A `3c0f6f6dc471e183`.
 
-**What was re-run from the repository.** Before release, every CPU experiment (`scripts/reproduce_cpu.sh`) and the three git demos were re-run from the repository layout and compared with the original outputs. They are identical apart from runtimes, git commit ids and reworded labels. The GPU experiments were run once on the original machine, and their outputs are included as produced.
+**What was re-run from the repository.**
+- **CPU experiments.** Before the first release, every CPU experiment (`scripts/reproduce_cpu.sh`) and the three git demos were re-run from the repository layout. They are identical to the original outputs, apart from runtimes, git commit ids and reworded labels.
+- **GPU experiments.** These were run once on the original machine, and their outputs are included as produced.
+- **The circuit experiments (exp18–exp23)** were run from the repository for this version. Exp23 caches MobileNetV2 features in `results/exp23_out/features.npz`, which is not committed; it is rebuilt on the first run, in about ten minutes on a CPU.
 
 ## Appendix B: Additional results
+
+**Room inside CatGAN-26, all shares** (PSNR in dB against the unedited generator, with the regression fold / zeroed):
+
+| layer (channels) | 1/64 | 1/32 | 1/16 | 1/8 | 1/4 | 1/2 |
+|---|---|---|---|---|---|---|
+| dense (512) | k=8: 38.2 / 33.8 | k=16: 35.6 / 32.2 | k=32: 32.4 / 29.9 | k=64: 28.4 / 25.5 | k=128: 24.4 / 20.8 | k=256: 19.7 / 15.9 |
+| b1c1 (512) | k=8: 53.9 / 26.7 | k=16: 47.5 / 24.1 | k=32: 44.9 / 22.1 | k=64: 39.8 / 18.7 | k=128: 34.1 / 15.5 | k=256: 24.1 / 12.3 |
+| b1c2 (512) | k=8: 56.8 / 28.2 | k=16: 51.4 / 24.3 | k=32: 45.9 / 20.8 | k=64: 39.4 / 18.3 | k=128: 29.7 / 14.6 | k=256: 21.8 / 12.3 |
+| b2c1 (256) | k=4: 50.6 / 28.2 | k=8: 45.2 / 23.1 | k=16: 37.0 / 19.3 | k=32: 32.0 / 16.5 | k=64: 21.9 / 12.8 | k=128: 18.3 / 10.5 |
+| b2c2 (256) | k=4: 41.9 / 27.6 | k=8: 34.9 / 21.9 | k=16: 32.2 / 19.3 | k=32: 28.9 / 15.9 | k=64: 24.7 / 14.4 | k=128: 19.9 / 10.3 |
+| b3c1 (128) | k=2: 39.2 / 26.7 | k=4: 33.9 / 22.3 | k=8: 30.3 / 19.8 | k=16: 25.5 / 15.4 | k=32: 21.9 / 14.6 | k=64: 15.9 / 11.2 |
+| b3c2 (128) | k=2: 37.9 / 26.8 | k=4: 33.3 / 22.5 | k=8: 30.6 / 22.1 | k=16: 27.7 / 19.2 | k=32: 23.6 / 16.2 | k=64: 19.1 / 12.7 |
+| b4c1 (64) | k=1: 41.3 / 32.9 | k=2: 38.0 / 30.7 | k=4: 33.9 / 26.1 | k=8: 28.9 / 24.0 | k=16: 24.2 / 18.8 | k=32: 20.2 / 14.4 |
+| b4c2 (64) | k=1: 39.9 / 28.9 | k=2: 37.7 / 27.0 | k=4: 34.5 / 23.9 | k=8: 30.5 / 22.3 | k=16: 25.6 / 18.8 | k=32: 20.0 / 14.6 |
+| b5c1 (32) | k=1: 38.2 / 30.4 | k=1: 38.2 / 30.4 | k=2: 34.8 / 28.5 | k=4: 32.3 / 26.1 | k=8: 26.1 / 19.2 | k=16: 20.0 / 17.2 |
+| b5c2 (32) | k=1: 47.5 / 31.4 | k=1: 47.5 / 31.4 | k=2: 45.3 / 31.3 | k=4: 41.2 / 30.5 | k=8: 34.0 / 24.4 | k=16: 26.1 / 17.8 |
+
+**TinySR-18A fine-tune checkpoints** (same gate; nine calibration images, L1 with dark pixels ×8):
+
+| steps | regression ΔPSNR | edge ΔPSNR | black floor | gate | seconds |
+|---|---|---|---|---|---|
+| 250 | +2.94 | +2.41 | 1.87 | FAIL (regression) | 45 |
+| 500 | +4.34 | +2.88 | 1.62 | PASS | 76 |
+| 750 | +4.01 | +2.89 | 1.59 | PASS | 98 |
+| 1,000 | +3.06 | +2.74 | 1.44 | PASS | 121 |
+| 1,250 | +3.04 | +2.74 | 1.45 | FAIL (regression) | 143 |
+| 1,500 | +3.51 | +2.90 | 1.52 | PASS | 165 |
+| 1,750 | +4.68 | +3.22 | 1.69 | PASS | 188 |
+| 2,000 | +4.79 | +3.35 | 1.92 | PASS | 210 |
+| 2,250 | +3.54 | +3.06 | 1.74 | PASS | 233 |
+| 2,500 | +3.76 | +3.10 | 1.77 | PASS | 271 |
+| 2,750 | +4.59 | +3.35 | 1.94 | PASS | 312 |
+| 3,000 | +5.10 | +3.60 | 2.19 | PASS | 355 |
+| 3,250 | +4.14 | +3.54 | 2.34 | PASS | 399 |
+| 3,500 | +3.40 | +3.41 | 2.28 | PASS | 442 |
+| 3,750 | +4.93 | +3.68 | 2.53 | PASS | 486 |
+| 4,000 | +5.07 | +3.63 | 2.26 | PASS | 528 |
+
+A failing verdict with a positive ΔPSNR comes from the SSIM limit. A first run of the same script, with the same seed, failed at 250 and 750 steps.
+
+**Odd-eye threshold sweeps** (fitting-image median hue of the targeted eye; the shipped quantile is the strictest in band):
+
+| patch | 0.90 | 0.95 | 0.97 | **0.98** | 0.99 |
+|---|---|---|---|---|---|
+| left eye only | 222° | 221° | 218° | **201°** | 41° |
+| right eye only | 223° | 222° | 220° | **218°** | 56° |
+| both eyes | 223° | 222° | 220° | **216°** | 46° |
+
+**Router confusion on the test set** (rows: input type; columns: network chosen; base / bicubic branch / noisy branch):
+
+| input | input-statistics router | self-consistency router |
+|---|---|---|
+| bicubic | 8 / 166 / 6 | 0 / 180 / 0 |
+| noisy | 23 / 18 / 139 | 0 / 0 / 180 |
+| nearest | 127 / 30 / 23 | 180 / 0 / 0 |
+
+**CatGAN-26 quality**, judged by MobileNetV2 on 500 images per row:
+
+| images | called a domestic cat | Fréchet distance to held-out real cats (MobileNetV2 features) | nearest training image (thumbnail correlation: median / share > 0.95) |
+|---|---|---|---|
+| real AFHQ validation cats | 97% | — | 0.70 / 2% |
+| real AFHQ training cats | 96% | 47.1 (real-vs-real floor) | — |
+| CatGAN-26 | 96% | 60.6 | 0.70 / 0% |
+| CatGAN-26, truncation 0.7 | 97% | 68.2 | 0.72 / 0% |
 
 **CatGAN-26 latent attributes** (400 held-out samples; one-direction lock at target 2):
 
@@ -662,9 +763,7 @@ Base hashes: CatGAN-26 `be2b16ff52fc4021`, TinySR-26 2× `8cb6601c1b449ffc`, Ani
 | eye green | 0.510 | 0.386 | 0.386 | 0.49 |
 | saturation | 0.462 | 0.076 | 0.325 | 2.11 |
 
-The lock ratios here are on 400 held-out samples; §4.2 reports the 1,024 selection latents of the subspace-lock experiment (0.72 and 0.43). A ratio above 1 means the lock made the attribute more variable.
-
-**Eye-gate threshold sweep.** The shipped quantile is the strictest whose *fitting-image* hue is in band. The cliff between 0.98 and 0.99 is where the detector's scores on irises and on the most iris-like fur overlap.
+**The 2018 blue-eye gate's threshold sweep** (CatGAN-26, 150 held-out cats):
 
 | quantile | fitting-image hue | held-out hue | rest-of-image change |
 |---|---|---|---|
@@ -674,22 +773,21 @@ The lock ratios here are on 400 held-out samples; §4.2 reports the 1,024 select
 | **0.98** | 219° | 214° | 0.0059 |
 | 0.99 | 41° | 38° | 0.0052 |
 
-**CatGAN-26 patches and an ImageNet classifier** (share of 64 samples whose top class is a domestic cat): base 95%; mirror 98%; truncation 95%; the five shifts 89–98%; locks 91% and 95%; ungated colour fold 95%; `prune2` + `eye_gate` 95%.
+**TinySR-18A output-layer patches of v1.0** (the gate of §4.3):
 
-**TinySR-18A colour folds: the dark-pixel trade-off** (calibration split; base black floor 6.93 RGB):
-
-| dark-pixel weight | ×1 | ×4 | ×16 | ×64 | ×256 | ×1024 |
-|---|---|---|---|---|---|---|
-| calibration PSNR (dB) | 23.39 | 23.29 | 21.64 | 17.24 | 13.21 | 11.32 |
-| black floor (RGB) | 11.10 | 8.04 | 6.29 | 4.53 | 2.76 | 1.81 |
+| variant | regression ΔPSNR | edge ΔPSNR | black floor (RGB) | weights changed | gate |
+|---|---|---|---|---|---|
+| v1 hotfix (bias zero + boost) | −3.50 | −1.48 | 4.63 | 107,203 | FAIL (regression) |
+| v1, bias only | −3.51 | −1.62 | 4.40 | 3 | FAIL (regression) |
+| `color_fold` (12 numbers) | +2.93 | +1.81 | 13.51 | 4,803 | FAIL (black floor rises) |
+| `color_fold_black` (dark pixels ×256) | −8.98 | −6.10 | 3.85 | 4,803 | FAIL (regression) |
+| `sharpen_fold` | +0.04 | −0.00 | 9.00 | 4,800 | FAIL (no edge gain) |
 
 **TinySR-26 against TinySR-18A and bicubic interpolation** (PSNR dB / SSIM, means over held-out images):
 
 | test (2× unless stated) | low-res input made by | bicubic | TinySR-18A | TinySR-26 |
 |---|---|---|---|---|
 | natural photos (4) | nearest | 26.77 / 0.838 | 22.75 / 0.736 | **29.89 / 0.894** |
-| natural photos (4) | bicubic | **29.72 / 0.892** | 22.30 / 0.697 | 29.35 / 0.879 |
-| sprites (6) | nearest | 22.93 / 0.923 | 19.45 / 0.679 | **25.48 / 0.937** |
 | AFHQ validation, 300 photos | nearest | 28.78 / 0.864 | 20.68 / 0.793 | **31.82 / 0.910** |
 | AFHQ validation, 300 photos | bicubic | 32.02 / 0.910 | 20.49 / 0.758 | **32.43 / 0.921** |
 | AFHQ validation, 300 photos, **4×** | bicubic | 29.21 / 0.794 | 15.38 / 0.560 (2× twice) | **30.17 / 0.827** |

@@ -1,0 +1,135 @@
+{
+ "chain": [
+  "dense",
+  "b1c1",
+  "b1c2",
+  "b2c1",
+  "b2c2",
+  "b3c1",
+  "b3c2",
+  "b4c1",
+  "b4c2",
+  "b5c1"
+ ],
+ "room_mode": "grow",
+ "room": {
+  "slots": {
+   "dense": 512,
+   "b1c1": 512,
+   "b1c2": 512,
+   "b2c1": 256,
+   "b2c2": 256,
+   "b3c1": 128,
+   "b3c2": 128,
+   "b4c1": 64,
+   "b4c2": 64,
+   "b5c1": 32
+  },
+  "psnr_vs_base": 134.93849623642944
+ },
+ "wire": {
+  "carrier_max_err": 0.0,
+  "output_change_vs_room": 2.9206275939941406e-06
+ },
+ "gates": {
+  "both": {
+   "quantile": 0.98,
+   "fit_hue_sweep": {
+    "0.9": 222.5077667236328,
+    "0.95": 221.90444946289062,
+    "0.97": 220.02293395996094,
+    "0.98": 216.0592041015625,
+    "0.99": 46.13323974609375
+   },
+   "left_eye_hue": [
+    92.11343383789062,
+    274
+   ],
+   "right_eye_hue": [
+    217.06448364257812,
+    281
+   ],
+   "rest_mae_vs_base": 0.001664173905737698,
+   "max_change_right_half_vs_room": 1.710728645324707,
+   "max_change_left_half_vs_room": 2.1551101207733154,
+   "weights_changed_or_added": 8170836,
+   "params": 8170839,
+   "params_base": 8128291,
+   "share_left_in_band": 0.41605839416058393,
+   "share_right_in_band": 0.48398576512455516
+  },
+  "left": {
+   "quantile": 0.98,
+   "fit_hue_sweep": {
+    "0.9": 222.38519287109375,
+    "0.95": 221.3861541748047,
+    "0.97": 217.76007080078125,
+    "0.98": 200.6492919921875,
+    "0.99": 41.40122985839844
+   },
+   "left_eye_hue": [
+    92.11322784423828,
+    274
+   ],
+   "right_eye_hue": [
+    41.44734573364258,
+    281
+   ],
+   "rest_mae_vs_base": 0.00094131741207093,
+   "max_change_right_half_vs_room": 1.3709068298339844e-06,
+   "max_change_left_half_vs_room": 2.1551101207733154,
+   "weights_changed_or_added": 8170836,
+   "params": 8170839,
+   "params_base": 8128291,
+   "share_left_in_band": 0.41605839416058393,
+   "share_right_in_band": 0.0,
+   "float64_max_change_right_half": 1.5906823391809155e-07,
+   "float64_max_change_left_half": 2.1128900875531214
+  },
+  "right": {
+   "quantile": 0.98,
+   "fit_hue_sweep": {
+    "0.9": 222.8943328857422,
+    "0.95": 221.83518981933594,
+    "0.97": 220.3186798095703,
+    "0.98": 218.2353973388672,
+    "0.99": 55.808101654052734
+   },
+   "left_eye_hue": [
+    39.69065475463867,
+    274
+   ],
+   "right_eye_hue": [
+    217.06442260742188,
+    281
+   ],
+   "rest_mae_vs_base": 0.0007230565533973277,
+   "max_change_right_half_vs_room": 1.710726261138916,
+   "max_change_left_half_vs_room": 1.430511474609375e-06,
+   "weights_changed_or_added": 8170836,
+   "params": 8170839,
+   "params_base": 8128291,
+   "share_left_in_band": 0.0,
+   "share_right_in_band": 0.48398576512455516
+  }
+ },
+ "base_hues": {
+  "left": [
+   39.69065856933594,
+   274
+  ],
+  "right": [
+   41.447349548339844,
+   281
+  ]
+ },
+ "seconds_total": 220.73270678520203,
+ "figure_latents": [
+  0,
+  1,
+  2,
+  4,
+  5,
+  6
+ ]
+}

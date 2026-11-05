@@ -1,0 +1,168 @@
+{
+ "fit_images": 120,
+ "test_images": 180,
+ "routers": {
+  "input statistics": {
+   "fit_accuracy": 0.8138888888888889,
+   "params": 43,
+   "features": 8,
+   "confusion_test": {
+    "rows (input)": [
+     "bicubic LR",
+     "noisy bicubic LR",
+     "nearest LR"
+    ],
+    "cols (expert)": [
+     "base",
+     "branch: bicubic",
+     "branch: noisy"
+    ],
+    "counts": [
+     [
+      8,
+      166,
+      6
+     ],
+     [
+      23,
+      18,
+      139
+     ],
+     [
+      127,
+      30,
+      23
+     ]
+    ]
+   }
+  },
+  "self-consistency": {
+   "fit_accuracy": 1.0,
+   "params": 33,
+   "features": 6,
+   "confusion_test": {
+    "rows (input)": [
+     "bicubic LR",
+     "noisy bicubic LR",
+     "nearest LR"
+    ],
+    "cols (expert)": [
+     "base",
+     "branch: bicubic",
+     "branch: noisy"
+    ],
+    "counts": [
+     [
+      0,
+      180,
+      0
+     ],
+     [
+      0,
+      0,
+      180
+     ],
+     [
+      180,
+      0,
+      0
+     ]
+    ]
+   }
+  }
+ },
+ "fit_seconds_incl_expert_passes": 70.36050057411194,
+ "tests": {
+  "bicubic LR": {
+   "base": 32.527622933726605,
+   "branch: bicubic": 32.760846231200006,
+   "branch: noisy": 32.32387989533587,
+   "union (input statistics)": 32.73427526473676,
+   "union (self-consistency)": 32.760846231200006,
+   "union (oracle)": 32.760846231200006
+  },
+  "noisy bicubic LR": {
+   "base": 26.891242471414134,
+   "branch: bicubic": 26.422332251734154,
+   "branch: noisy": 30.152596617815487,
+   "union (input statistics)": 29.585389240360144,
+   "union (self-consistency)": 30.152596617815487,
+   "union (oracle)": 30.152596617815487
+  },
+  "nearest LR": {
+   "base": 31.121491915275854,
+   "branch: bicubic": 26.23758346692883,
+   "branch: noisy": 30.110331489265324,
+   "union (input statistics)": 30.164827006696665,
+   "union (self-consistency)": 31.121491915275854,
+   "union (oracle)": 31.121491915275854
+  }
+ },
+ "mux_max_err_vs_selection": 5.960464477539063e-08,
+ "delta_vs_base": {
+  "base": {
+   "bicubic LR": 0.0,
+   "noisy bicubic LR": 0.0,
+   "nearest LR": 0.0
+  },
+  "branch: bicubic": {
+   "bicubic LR": 0.2332232974734012,
+   "noisy bicubic LR": -0.46891021967998014,
+   "nearest LR": -4.883908448347025
+  },
+  "branch: noisy": {
+   "bicubic LR": -0.2037430383907335,
+   "noisy bicubic LR": 3.2613541464013522,
+   "nearest LR": -1.0111604260105302
+  },
+  "union (input statistics)": {
+   "bicubic LR": 0.20665233101015446,
+   "noisy bicubic LR": 2.694146768946009,
+   "nearest LR": -0.9566649085791887
+  },
+  "union (self-consistency)": {
+   "bicubic LR": 0.2332232974734012,
+   "noisy bicubic LR": 3.2613541464013522,
+   "nearest LR": 0.0
+  },
+  "union (oracle)": {
+   "bicubic LR": 0.2332232974734012,
+   "noisy bicubic LR": 3.2613541464013522,
+   "nearest LR": 0.0
+  }
+ },
+ "meets_spec": {
+  "base": false,
+  "branch: bicubic": false,
+  "branch: noisy": false,
+  "union (input statistics)": false,
+  "union (self-consistency)": true,
+  "union (oracle)": true
+ },
+ "params": {
+  "one network": 276732,
+  "union (3 experts)": 830196
+ },
+ "exp16_reference": {
+  "joint_retrain": {
+   "psnr": {
+    "bicubic LR": 32.55644022534281,
+    "noisy bicubic LR": 30.08205182060732,
+    "nearest LR": 31.196780044429275
+   },
+   "delta": {
+    "bicubic LR": 0.02881729161620683,
+    "noisy bicubic LR": 3.1908093491931844,
+    "nearest LR": 0.07528812915342087
+   },
+   "meets_spec": true
+  },
+  "timing": {
+   "steps": 1000,
+   "rel_norm": 0.09679160267114639,
+   "joint_steps": 3000,
+   "seconds": 242.78473734855652
+  }
+ },
+ "seconds_total": 205.92963814735413
+}

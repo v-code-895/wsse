@@ -1,14 +1,17 @@
 cff-version: 1.2.0
 message: "If you use this software or its results, please cite the paper below."
-title: "Weight-Space Software Engineering (WSSE): wpgit and .weightpatch"
+title: "Weight-Space Software Engineering (WSSE): circuit patches, wpgit and .weightpatch"
 abstract: >-
-  Version control and unit-tested patches for neural network weights.
-  Weight edits are hash-pinned, self-testing text patches (.weightpatch.json) that wpgit builds,
-  tests in context and merge-checks under git; demonstrated on 2017-2020 Keras checkpoints and on
-  two models trained in 2026 (TinySR-26, CatGAN-26).
+  An LLM agent rewires small trained neural networks with exact, tested patches. Exact identities of
+  (Leaky)ReLU activations carry signals, gate, bound and switch inside a trained network; room comes
+  from freeing channels by regression or growing them with zero outgoing weights. Patches compile
+  logic into a cat GAN (odd-eyed cats), give a 2018 super-sampler a provable output bound, resolve a
+  fine-tune merge conflict with a self-checking routed union, and fix a classifier with a local
+  exception. Patches are hash-pinned, self-testing text files that wpgit builds, tests in context,
+  merge-checks and rebases under git.
 type: software
-version: "1.0.2"
-date-released: "2026-11-04"
+version: "2.0.0"
+date-released: "2026-11-05"
 license: MIT
 doi: 10.5281/zenodo.23956114
 authors:
@@ -18,6 +21,8 @@ authors:
   - name: "Claude (Anthropic; model Claude Opus 5.5)"
 keywords:
   - weight editing
+  - neural network surgery
+  - LLM agents
   - model patching
   - version control
   - software engineering for machine learning
@@ -26,7 +31,7 @@ keywords:
 repository-code: "https://github.com/v-code-895/wsse"
 preferred-citation:
   type: report
-  title: "Weight-Space Software Engineering: Version Control and Unit-Tested Patches for Neural Network Weights"
+  title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
   authors:
     - given-names: Voravee
       family-names: Upatising

@@ -1,5 +1,28 @@
 # Changelog
 
+## v2.0.0 — 2026-11-05
+
+The paper is reframed around its new experiments, under a new title: *Beyond Gradient Descent: An LLM
+Agent Rewires Trained Neural Networks with Exact, Tested Patches*. The git workflow of v1 is now one
+section (§5), on keeping many patches working.
+
+New code (`src/`):
+- `circuits.py`: exact (Leaky)ReLU identities (carry, pass, relu, abs, min, max, clamp, step, and,
+  or, gate, mux) and channel freeing by regression.
+- `exp18_circuit_primitives.py`: exactness tests of every identity, plus exact width and depth growth
+  of CatGAN-26.
+- `exp19_free_capacity.py`: how many channels each CatGAN-26 layer can free, with and without the fold.
+- `exp20_odd_eyes.py`: a coordinate wire and an AND gate compiled into CatGAN-26 (odd-eyed cats).
+- `exp21_guarded_sr.py`: TinySR-18A rewired with a reference path and a min-gate; passes the v1
+  regression gate; compared with fine-tuning.
+- `exp22_union_router.py`: the v1 fine-tune merge conflict resolved by a routed union with a
+  self-consistency router.
+- `exp23_exception_patch.py`: a gated exception unit fixes MobileNetV2's cat errors; compared with
+  head fine-tunes.
+
+Earlier results are unchanged. The weights of the new experiments are produced by their scripts
+and are not attached to the release.
+
 ## v1.0.2 — 2026-11-04
 
 - Paper: the abstract and introduction describe how patches are written. An AI coding agent

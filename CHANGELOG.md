@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.2 — 2026-11-05
+
+Layout only: Figure 1 now sits right after the first paragraph of §1, so it appears on page 2 of the PDF
+with its whole caption. No text or numbers changed.
+
 ## v2.0.1 — 2026-11-05
 
 More figures, and one spelling fix.

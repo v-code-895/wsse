@@ -3,7 +3,7 @@ title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks wi
 author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
-date: November 5, 2026 (version 2.0.1)
+date: November 5, 2026 (version 2.0.2)
 site: https://v-code-895.github.io/wsse/
 code: https://github.com/v-code-895/wsse
 doi: 10.5281/zenodo.23956114
@@ -41,6 +41,10 @@ A trained checkpoint is usually treated as a sealed artifact. When it misbehaves
 - Every step moves every output a little.
 - What it learns holds approximately, on inputs like its training data. It says nothing about other inputs.
 
+![Figure 1](figures/fig_odd_eyes_hero.png)
+
+*Figure 1. Odd-eyed cats from a GAN never trained on any. The agent compiled a coordinate wire and an AND gate into CatGAN-26, an 8.1M-parameter cat generator (§4.2). Columns: the base model; a patch that turns only the left iris blue; the same patch with its logic inverted (right iris); both irises; and how much the left-eye patch changed each pixel, on a 0–1 scale, computed in float64. The change is confined to the left eye. In the right half it is at most 1.6×10⁻⁷, which is rounding error: there the gate is ANDed with a wire that is exactly 1. Of 300 held-out cats, 92 end with both irises in the blue band; these three were drawn at random from the 30 of them with the least change outside the eyes. Per eye, the gates turn 42–48% of irises blue (Table 4); Figure 6 shows less selected cats. Images upscaled 2× by TinySR-26; change maps from the 128-px outputs.*
+
 Takehi et al. [1] showed that frontier language models can read weight tensors and write edits to them without gradients. We take the next step on small models. An LLM coding agent, directed by a person, edits not only a trained network's weights but its *topology*. It adds channels and layers, carries signals around the learned computation, and installs exact logic, guards and switches, all built from the layer types the network already has. Patches like these can do things training cannot:
 - add a behaviour for which there is no training data (a generator that has never seen an odd-eyed cat draws one);
 - keep a stated part of the function exactly unchanged (one half of every image; every input on which an exception does not fire);
@@ -54,10 +58,6 @@ Two channels driven with opposite signs therefore carry any signal through a non
 What remains is room, since a trained layer has no idle channels. The agent makes room in one of two ways (§3.2):
 - **Freeing** channels: it regresses them onto the rest of their layer and folds the regression into the next layer.
 - **Growing** the layer: it adds channels whose outgoing weights are zero, which changes nothing at all.
-
-![Figure 1](figures/fig_odd_eyes_hero.png)
-
-*Figure 1. Odd-eyed cats from a GAN never trained on any. The agent compiled a coordinate wire and an AND gate into CatGAN-26, an 8.1M-parameter cat generator (§4.2). Columns: the base model; a patch that turns only the left iris blue; the same patch with its logic inverted (right iris); both irises; and how much the left-eye patch changed each pixel, on a 0–1 scale, computed in float64. The change is confined to the left eye. In the right half it is at most 1.6×10⁻⁷, which is rounding error: there the gate is ANDed with a wire that is exactly 1. Of 300 held-out cats, 92 end with both irises in the blue band; these three were drawn at random from the 30 of them with the least change outside the eyes. Per eye, the gates turn 42–48% of irises blue (Table 4); Figure 6 shows less selected cats. Images upscaled 2× by TinySR-26; change maps from the 128-px outputs.*
 
 **Who writes the patches, and what we built around the agent.** Every patch in §4 was designed and compiled by an LLM coding agent (Claude Opus 5.5, working in Claude Code), on small models, with a person in the loop:
 - **The person** states the goal and its specification, for example "one blue eye, nothing else changes", or "lower the black floor without losing 0.1 dB anywhere".

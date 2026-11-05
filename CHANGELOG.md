@@ -2,8 +2,10 @@
 
 ## v2.0.2 — 2026-11-05
 
-Layout only: Figure 1 now sits right after the first paragraph of §1, so it appears on page 2 of the PDF
-with its whole caption. No text or numbers changed.
+- The README is now a tour of the paper: the idea, each result with its figure and table (11 figures),
+  what gradient descent still does better, a contents list and a BibTeX entry.
+- Figure 1 now sits right after the first paragraph of §1, so it appears on page 2 of the PDF with its
+  whole caption. The paper's text and numbers are unchanged.
 
 ## v2.0.1 — 2026-11-05
 

@@ -24,7 +24,29 @@
   "fit_errors": 45,
   "fit_errors_where_unit_fires": 45,
   "new_params": 1287,
-  "fit_seconds": 0.35324573516845703
+  "fit_seconds": 0.1680619716644287
+ },
+ "unit_adam_fit_nonfiring": {
+  "one unit trained by Adam, errors only, lr 0.001": {
+   "fires_on_fitting_noncats": 1200,
+   "of": 1200,
+   "fires_on_fitting_cats": 600
+  },
+  "one unit trained by Adam, errors only, lr 0.01": {
+   "fires_on_fitting_noncats": 1200,
+   "of": 1200,
+   "fires_on_fitting_cats": 600
+  },
+  "one unit trained by Adam, with preservation, lr 0.001": {
+   "fires_on_fitting_noncats": 1177,
+   "of": 1200,
+   "fires_on_fitting_cats": 600
+  },
+  "one unit trained by Adam, with preservation, lr 0.01": {
+   "fires_on_fitting_noncats": 60,
+   "of": 1200,
+   "fires_on_fitting_cats": 600
+  }
  },
  "val": {
   "base": {
@@ -64,7 +86,7 @@
     "wild": 33
    },
    "max_logit_change_where_unit_off": 0.0,
-   "seconds": 0.35324573516845703
+   "seconds": 0.1680619716644287
   },
   "head fine-tune, with preservation": {
    "cat_acc": 0.998,
@@ -78,7 +100,7 @@
    "wild_called_cat": 1,
    "wild_kl_vs_base": 0.0016552080325021974,
    "wild_max_logit_change": 2.1754188045683915,
-   "seconds": 3.039865732192993
+   "seconds": 1.4675474166870117
   },
   "head fine-tune, errors only": {
    "cat_acc": 1.0,
@@ -92,8 +114,88 @@
    "wild_called_cat": 336,
    "wild_kl_vs_base": 2.236982006866576,
    "wild_max_logit_change": 7.365808747342982,
-   "seconds": 1.883918285369873
+   "seconds": 0.8912413120269775
+  },
+  "one unit trained by Adam, errors only, lr 0.001": {
+   "cat_acc": 1.0,
+   "cat_errors_fixed": "23/23",
+   "cat_correct_broken": 0,
+   "dog_top1_changed": 166,
+   "dog_called_cat": 166,
+   "dog_kl_vs_base": 0.593047133527792,
+   "dog_max_logit_change": 11.162514822586406,
+   "wild_top1_changed": 145,
+   "wild_called_cat": 145,
+   "wild_kl_vs_base": 1.011637911559692,
+   "wild_max_logit_change": 10.321664631455135,
+   "unit_fired": {
+    "cat": 500,
+    "dog": 500,
+    "wild": 500
+   },
+   "max_logit_change_where_unit_off": 0.0,
+   "seconds": 0.504472017288208
+  },
+  "one unit trained by Adam, errors only, lr 0.01": {
+   "cat_acc": 1.0,
+   "cat_errors_fixed": "23/23",
+   "cat_correct_broken": 0,
+   "dog_top1_changed": 500,
+   "dog_called_cat": 500,
+   "dog_kl_vs_base": 7.8646909369453395,
+   "dog_max_logit_change": 24.294929803565452,
+   "wild_top1_changed": 499,
+   "wild_called_cat": 499,
+   "wild_kl_vs_base": 6.546025899224504,
+   "wild_max_logit_change": 22.17837681480133,
+   "unit_fired": {
+    "cat": 500,
+    "dog": 500,
+    "wild": 500
+   },
+   "max_logit_change_where_unit_off": 0.0,
+   "seconds": 0.4491286277770996
+  },
+  "one unit trained by Adam, with preservation, lr 0.001": {
+   "cat_acc": 0.998,
+   "cat_errors_fixed": "22/23",
+   "cat_correct_broken": 0,
+   "dog_top1_changed": 0,
+   "dog_called_cat": 0,
+   "dog_kl_vs_base": 0.0012745668869943412,
+   "dog_max_logit_change": 3.620617190272637,
+   "wild_top1_changed": 3,
+   "wild_called_cat": 3,
+   "wild_kl_vs_base": 0.0037804212380575545,
+   "wild_max_logit_change": 4.373345580327242,
+   "unit_fired": {
+    "cat": 500,
+    "dog": 476,
+    "wild": 499
+   },
+   "max_logit_change_where_unit_off": 0.0,
+   "seconds": 0.5998499393463135
+  },
+  "one unit trained by Adam, with preservation, lr 0.01": {
+   "cat_acc": 0.998,
+   "cat_errors_fixed": "22/23",
+   "cat_correct_broken": 0,
+   "dog_top1_changed": 0,
+   "dog_called_cat": 0,
+   "dog_kl_vs_base": 3.062654973548712e-05,
+   "dog_max_logit_change": 2.4249560022082632,
+   "wild_top1_changed": 0,
+   "wild_called_cat": 0,
+   "wild_kl_vs_base": 0.00017521340304012565,
+   "wild_max_logit_change": 3.954338556215001,
+   "unit_fired": {
+    "cat": 499,
+    "dog": 19,
+    "wild": 31
+   },
+   "max_logit_change_where_unit_off": 0.0,
+   "seconds": 0.5955729484558105
   }
  },
- "seconds_total": 609.5504841804504
+ "seconds_total": 9.501191854476929
 }

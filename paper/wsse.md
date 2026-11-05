@@ -1,9 +1,9 @@
 ---
-title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
+title: "Beyond Fixed Architectures: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
 author:
   - Voravee Upatising
   - Claude (Anthropic; Claude Opus 5.5)
-date: November 5, 2026 (version 2.0.2)
+date: November 5, 2026 (version 2.1.0)
 site: https://v-code-895.github.io/wsse/
 code: https://github.com/v-code-895/wsse
 doi: 10.5281/zenodo.23956114
@@ -25,14 +25,14 @@ On four small models, the agent's patches do things that training the model does
 - **Logic in a GAN.** A coordinate wire and an AND gate compiled into an 8.1M-parameter cat generator give odd-eyed cats. 42% of left irises turn blue and no right iris changes. The right half of every image moves by at most 1.6×10⁻⁷ (float64).
 - **A repair with a bound.** A 2018 super-sampler lifts black, and no output-layer patch could fix it. With a reference path and a min-gate it passes its regression gate (+3.4 dB). On any input, wherever the input is black around a pixel, the output there is provably at most 1/255.
 - **Growing instead of averaging.** No weighted merge, cherry-pick or repair could combine two particular fine-tunes. Placed side by side behind a self-checking router, they keep each branch's whole gain (+0.23, +3.26, +0.00 dB): the router picks the right network for all 540 test images. That beats joint retraining (+0.03, +3.19, +0.08 dB), at three times the parameters.
-- **An exception in a classifier.** One gated unit beside MobileNetV2's classifier fixes 22 of 23 misclassified cats and changes 1 of 1,000 dog and wild-animal predictions. Wherever it does not fire, the logits are exactly the original's. A quick fine-tune on the same errors turns 711 of those animals into cats.
+- **An exception in a classifier.** One gated unit beside MobileNetV2's classifier fixes 22 of 23 misclassified cats and changes 1 of 1,000 dog and wild-animal predictions. Wherever it does not fire, the logits are exactly the original's. A quick fine-tune on the same errors turns 711 of those animals into cats. Trained by Adam on the same data, the same one-unit structure does as well: what the patch adds is the structure.
 
 Each patch is fitted in seconds to minutes, without gradients. Patches are text files that carry their own tests, and a small tool, `wpgit`, does three things with them:
 - tests each patch in the context of the others;
 - finds pairs of patches whose order matters;
 - rebases patches onto updated models.
 
-On a 15-commit history of the cat generator, those checks catch failures that each patch's own tests miss. Patching does not replace training: with data in hand, a short fine-tune beats the repair above on every metric, but bounds nothing. It adds a layer on top of training, in which a trained model is a starting point that can be extended, constrained, combined and fixed. Code, patches and models are at https://github.com/v-code-895/wsse, archived at https://doi.org/10.5281/zenodo.23956114.
+On a 15-commit history of the cat generator, those checks catch failures that each patch's own tests miss. The odd-eye patch, written as grow and wiring operators, joins that history: it passes its tests next to two latent locks and commutes with them exactly. Patching does not replace training: with data in hand, a short fine-tune beats the repair above on every metric, but bounds nothing. It adds a layer on top of training, in which a trained model is a starting point that can be extended, constrained, combined and fixed. Code, patches and models are at https://github.com/v-code-895/wsse, archived at https://doi.org/10.5281/zenodo.23956114.
 
 ## 1. Introduction
 
@@ -45,7 +45,7 @@ A trained checkpoint is usually treated as a sealed artifact. When it misbehaves
 
 *Figure 1. Odd-eyed cats from a GAN never trained on any. The agent compiled a coordinate wire and an AND gate into CatGAN-26, an 8.1M-parameter cat generator (§4.2). Columns: the base model; a patch that turns only the left iris blue; the same patch with its logic inverted (right iris); both irises; and how much the left-eye patch changed each pixel, on a 0–1 scale, computed in float64. The change is confined to the left eye. In the right half it is at most 1.6×10⁻⁷, which is rounding error: there the gate is ANDed with a wire that is exactly 1. Of 300 held-out cats, 92 end with both irises in the blue band; these three were drawn at random from the 30 of them with the least change outside the eyes. Per eye, the gates turn 42–48% of irises blue (Table 4); Figure 6 shows less selected cats. Images upscaled 2× by TinySR-26; change maps from the 128-px outputs.*
 
-Takehi et al. [1] showed that frontier language models can read weight tensors and write edits to them without gradients. We take the next step on small models. An LLM coding agent, directed by a person, edits not only a trained network's weights but its *topology*. It adds channels and layers, carries signals around the learned computation, and installs exact logic, guards and switches, all built from the layer types the network already has. Patches like these can do things training cannot:
+Takehi et al. [1] showed that frontier language models can read weight tensors and write edits to them without gradients. We take the next step on small models. An LLM coding agent, directed by a person, edits not only a trained network's weights but its *topology*. It adds channels and layers, carries signals around the learned computation, and installs exact logic, guards and switches, all built from the layer types the network already has. Patches like these can do things that training a fixed architecture cannot:
 - add a behaviour for which there is no training data (a generator that has never seen an odd-eyed cat draws one);
 - keep a stated part of the function exactly unchanged (one half of every image; every input on which an exception does not fire);
 - bound the output on every input, not only on test data;
@@ -76,23 +76,23 @@ The patches are small. Most of their numbers are wiring constants the agent writ
 1. **Exact logic compiles into a trained GAN** (§4.2). A coordinate wire and an AND gate turn one iris blue and leave the other half of the image unchanged to float precision. Growing the room costs 0.5% more parameters and nothing in fidelity. Freeing it instead raises the mean change outside the eyes from 0.24 to 3.97 RGB levels.
 2. **A rewired network repairs what output-layer edits could not, with a bound on every input** (§4.3). TinySR-18A's black lift resisted every output fold; a reference path and a min-gate pass its gate. A short fine-tune on the same images scores better and bounds nothing.
 3. **Growing beats averaging for fine-tunes that compete** (§4.4). Side by side behind a self-checking router, two branches keep their whole gains, where weighted merges and joint retraining trade them off.
-4. **An exception fixes a classifier locally** (§4.5). It fixes 22 of 23 errors and changes 1 of 1,000 other predictions, against 711 for a quick fine-tune.
+4. **An exception fixes a classifier locally** (§4.5). It fixes 22 of 23 errors and changes 1 of 1,000 other predictions, against 711 for a quick fine-tune. Adam can fit the same one-unit structure as well, given the same data and the right learning rate: the gain is the structure, not the absence of gradients.
 5. **Patches need engineering to coexist** (§5). In a 15-commit history of the cat generator, git merges silently what the weights cannot hold together:
    - a patch that passes alone fails once merged;
    - two semantic conflicts merge without a textual conflict;
    - patches written against hidden channels go stale when the model trains further.
 
-   In-context tests catch all of it.
+   In-context tests catch all of it. With a `grow` operator in the patch format, the odd-eye patch of §4.2 joins the same repository, passes its tests next to the latent locks and commutes with them exactly (§5.4).
 
 **Contributions.**
 - An instruction set for rewiring trained (Leaky)ReLU networks: exact identities that carry, gate, bound and switch signals, and two ways to make room, with exactness and cost measured on real models.
-- Four agent-written patches on small trained models that do what training the model does not, each compared with fine-tuning:
+- Four agent-written patches on small trained models that do what training the model does not, each compared with fine-tuning, and the exception also with gradient descent on its own structure:
   - compiled logic (odd-eyed cats);
   - a repair with an output bound;
   - a routed union that resolves a merge conflict;
   - a local exception in a classifier.
 - An account of the human–agent loop that produced them, including the proposals the tests rejected (§7.2).
-- The engineering that lets many patches coexist (a self-testing text format, in-context tests, semantic merge checks, rebasing) and a 15-commit case study.
+- The engineering that lets many patches coexist (a self-testing text format with a grow operator for topology patches, in-context tests, semantic merge checks, rebasing) and a 15-commit case study.
 - All code, patches, git histories and models.
 
 ## 2. Related work
@@ -113,12 +113,13 @@ The patches are small. Most of their numbers are wiring constants the agent writ
 
 Most of these change weights inside a fixed architecture; GRACE's codebook and low-rank adapters add parameters of a fixed form. The patches here change the architecture as each edit requires: they add carriers, gates, guards, units and branches, built from exact identities.
 
-**Repair with guarantees.** Provable repair [39] solves for new weights of a ReLU network so that a specification holds on whole regions of input space, and verifiers such as Reluplex [41] check such properties. Our guards get their bound by construction instead: the bound is a wiring of exact identities, so it holds on every input and needs no solver. The price is that a guard can only bound quantities the network itself computes, such as a smoothed copy of its input.
+**Repair with guarantees.** Provable repair [39] solves for new weights of a ReLU network so that a specification holds on whole regions of input space, and verifiers such as Reluplex [41] check such properties. Our guards get their bound by construction instead: the bound is a wiring of exact identities, so it holds on every input and needs no solver. The price is that a guard can only bound quantities the network itself computes, such as a smoothed copy of its input. REASSURE [45] repairs a ReLU network by adding a patch network supported on the linear region of each faulty input, with guarantees of soundness, completeness, minimality and locality: outside the repaired regions the output is unchanged. Our exception unit (§4.5) is local in the same sense, exactly unchanged wherever it does not fire, but its region is a half-space of the classifier's penultimate features, fitted in closed form rather than found by solving linear programs.
 
 **Building networks by hand.** ReLU networks compute exactly the continuous piecewise-linear functions [42], which is why min, max and gates compile exactly.
 - Net2Net [35] grows a trained network wider or deeper while preserving its function, to speed up training. We use the same function-preserving growth to make room for circuits.
+- CoordConv [48] gives convolutions access to position by adding coordinate channels before training. The odd-eye patch (§4.2) adds a coordinate channel to a network that is already trained, and carries it through ten layers with the `carry` identity.
 - Tracr [36] compiles RASP programs [37] into transformer weights from scratch. We compile small programs into networks that are already trained, around their learned computation.
-- Mixture-of-experts layers [38] route inputs between sub-networks with a trained gate. Our union (§4.4) routes between whole networks with a gate fitted in closed form from the experts' own outputs.
+- Mixture-of-experts layers [38] route inputs between sub-networks with a trained gate. Branch-Train-Merge [46] trains domain experts separately and combines them by ensembling or parameter averaging, weighted by the input's estimated domain, and Branch-Train-MiX [47] mixes the experts' feed-forward layers into mixture-of-experts layers with a trained router. Our union (§4.4) also keeps experts separate, but routes between whole networks with a gate fitted in closed form. Routing by input statistics failed there (−0.96 dB on nearest-neighbour inputs); the router that works checks each expert's output against the input (540 of 540).
 
 **Developing models like open-source software.** Raffel [25] proposed that pretrained models be built the way open-source software is: improved continually by a community, with the tools that make this possible. He named four open problems, and this paper bears on each.
 - *Incremental, cheaply communicable updates.* Gradient descent changes every parameter, so a change to a model cannot be shipped as a small patch. Raffel pointed to function-preserving growth (Net2Net [35]), adapters and conditional computation [38] as ways around this. Our patches are of that kind: a 12-number colour fold, a rank-2 lock, or a circuit in grown channels, each stored as a few readable parameters with its tests (§3.3).
@@ -210,13 +211,13 @@ The operators of the first release act on a fixed architecture:
 - sparse diffs, for channel freeing and circuit wiring;
 - dense deltas, for fine-tunes.
 
-A 12-number colour fold rewrites 4,803 weights at build time, and a reviewer can read all 12 numbers. The topology patches of §4 change layer widths and add layers. They are built and tested by their scripts, and adding grow and insert operators to the format is future work (§7.4).
+A 12-number colour fold rewrites 4,803 weights at build time, and a reviewer can read all 12 numbers. This version adds one topology operator, **`grow`**, which appends $k$ channels to a layer with zero incoming and outgoing weights, an exact no-op that changes layer widths. Sparse diffs later in the same patch then wire the new channels. The odd-eye patch of §4.2 is 11 grow operations and 13 sparse diffs (§5.4). The guard's inserted layers and the union's branches are still built by their scripts (§7.4).
 
 A **weight repository** is a git repository holding only text: a `base.json` that pins the checkpoint, and the patches. `wpgit` adds what git cannot know about weights:
 - **`build`** applies the patches in dependency order and refuses a checkpoint whose hash does not match.
 - **`test`** runs every patch's tests *in context*: it compares the full build with the full build minus that patch and anything that requires it.
 - **`check`** builds every independent pair in both orders and reports whether the pair commutes, structurally or numerically, or conflicts.
-- **`rebase`** re-pins the repository to a new checkpoint. It marks a sparse diff `stale_context` when the entries it was computed against have moved, like a text diff whose context lines changed.
+- **`rebase`** re-pins the repository to a new checkpoint. It marks a sparse diff `stale_context` when the entries it was computed against have moved, like a text diff whose context lines changed. A grown channel that reads existing channels is also marked stale when any base layer up to the one it reads from has moved (§5.4).
 
 A textually clean merge can hide two kinds of **semantic conflict**:
 - **Type I, interference:** two patches act on overlapping subspaces, so whichever runs second partly undoes the first. This can be resolved algebraically.
@@ -238,11 +239,11 @@ Every proposal and its fate are recorded in §7.2. Table 3 separates what the ag
 | odd eyes (§4.2) | 26: a 16-cell coordinate pattern, 9 copy taps, the AND weight | 293: a 289-number iris detector, its threshold, a 3-number colour | 1 channel in each of 10 layers + 2, grown | seconds per fit; 4 min with all threshold sweeps |
 | guard (§4.3) | the reference path (copy taps, a 5×5 binomial kernel) and the identity weights of the min-gate | 12: a colour map and offset; 2–3 guard settings from a 30- or 36-point grid | 3 channels in each of 4 layers, grown or freed; 1–2 new layers | 11 s |
 | union (§4.4) | 6 self-check features; the multiplexer | 33: a linear router | three networks side by side | 70 s, mostly running the experts on 360 fitting inputs |
-| exception (§4.5) | the unit's wiring to the five cat classes | 1,281 probe weights; threshold and boost by rule | one new unit | 0.35 s |
+| exception (§4.5) | the unit's wiring to the five cat classes | 1,281 probe weights; threshold and boost by rule | one new unit | 0.17 s |
 
 *Table 3. What each patch is made of.*
 
-## 4. Patches that training cannot write
+## 4. Patches that change the architecture
 
 ### 4.1 Four small models
 
@@ -387,15 +388,18 @@ where $\phi$ is the 1,280-dimensional pooled feature. Its numbers are fitted on 
 - $\theta$: the smallest threshold that fires on no fitting dog or wild animal;
 - $\beta$: the smallest boost that fixes the fitting errors on which the unit fires (all 45).
 
-The patch adds 1,287 parameters and is fitted in 0.35 s.
+The patch adds 1,287 parameters and is fitted in 0.17 s.
 
 | fix (500 validation images per class) | cat errors fixed | correct cats broken | dog predictions changed | wild predictions changed (now "cat") | KL from base: dogs / wild | fit time |
 |---|---|---|---|---|---|---|
-| **exception unit** | **22/23** | 0 | **0** | **1 (1)** | **0.0001 / 0.0004** | 0.35 s |
-| head fine-tune with a preservation loss | 22/23 | 0 | 2 | 2 (1) | 0.0007 / 0.0017 | 3.0 s |
-| head fine-tune on the errors only | 23/23 | 0 | 377 (375 now "cat") | 338 (336) | 2.27 / 2.24 | 1.9 s |
+| **exception unit, fitted in closed form** | **22/23** | 0 | **0** | **1 (1)** | **0.0001 / 0.0004** | 0.17 s |
+| the same unit trained by Adam, preservation loss, lr 10⁻² | 22/23 | 0 | 0 | 0 | 0.00003 / 0.0002 | 0.6 s |
+| the same unit trained by Adam, preservation loss, lr 10⁻³ | 22/23 | 0 | 0 | 3 (3) | 0.0013 / 0.0038 | 0.6 s |
+| the same unit trained by Adam, errors only, lr 10⁻³ | 23/23 | 0 | 166 (166 now "cat") | 145 (145) | 0.59 / 1.01 | 0.5 s |
+| head fine-tune with a preservation loss | 22/23 | 0 | 2 | 2 (1) | 0.0007 / 0.0017 | 1.5 s |
+| head fine-tune on the errors only | 23/23 | 0 | 377 (375 now "cat") | 338 (336) | 2.27 / 2.24 | 0.9 s |
 
-*Table 7. Fixing MobileNetV2's cat errors. Fine-tunes use Adam for 300 steps on the classifier's 1.28M weights. The preservation loss is the KL from the base predictions on the fitting dogs and wild animals.*
+*Table 7. Fixing MobileNetV2's cat errors. Every gradient-trained row uses Adam for 300 steps on the same fitting images, either on the classifier's 1.28M weights (head) or on the exception unit's 1,281 input and 5 output weights, starting from small random input weights and zero output weights. The preservation loss is the KL from the base predictions on the fitting dogs and wild animals. Trained on the errors only at lr 10⁻², the unit fires on every image and turns 999 of 1,000 animals into cats.*
 
 ![Figure 9](figures/fig_exception.png)
 
@@ -405,10 +409,11 @@ The patch adds 1,287 parameters and is fitted in 0.35 s.
 - **The one cat error it leaves is a labelling error.** AFHQ files a wild cat, apparently a clouded leopard, under cats; MobileNetV2 calls it a leopard, and the unit, fitted to stay off on wild animals, stays off (Figure 9).
 - **The threshold does not stop the unit firing on new non-cats.** It was fitted on 1,200 of them, so the guarantee is local behaviour where the unit is off, plus a network that reports when it has fired, not silence on every non-cat.
 - **A careful fine-tune matches the fixes and drifts more** (4–8× the KL, four changed predictions). A quick one is a disaster: it turns 711 of 1,000 dogs and wild animals into cats.
+- **Gradient descent on the same structure does as well, with care.** Trained by Adam with the preservation loss at lr 10⁻², the same one-unit branch fixes the same 22 errors, changes no dog or wild-animal prediction and fires on 50 of the 1,000, against 106 for the closed-form unit. At lr 10⁻³ it fires on 975 of them and changes three. Trained on the errors alone, it turns 311 (lr 10⁻³) to 999 (lr 10⁻²) of the 1,000 animals into cats. The closed-form rule needs no learning rate, and its threshold keeps the unit silent on all 1,200 fitting non-cats; the best Adam-trained unit fires on 60 of them. What the patch adds is the structure, a unit beside the classifier that is exactly silent where it is off. Gradient descent on the trained classifier cannot add that unit; once it is there, gradient descent can fit it.
 
 ## 5. Keeping many patches working
 
-The patches of §4 were each tested alone. Models in use collect many edits from several authors over time, and the tests of single patches are not enough. This section is the v1.0 case study: a 15-commit git history of patches on CatGAN-26, built with the fixed-architecture operators of §3.3. The tests and their bounds were written for a 2018 anime generator (§6) and reused unchanged, except the eye-hue band.
+The patches of §4 were each tested alone. Models in use collect many edits from several authors over time, and the tests of single patches are not enough. This section is the v1.0 case study: a 15-commit git history of patches on CatGAN-26, built with the fixed-architecture operators of §3.3. The tests and their bounds were written for a 2018 anime generator (§6) and reused unchanged, except the eye-hue band. §5.4 then brings a topology patch from §4 into the same repository.
 
 ![Figure 10](figures/fig1_cat_repository.png)
 
@@ -469,6 +474,16 @@ We trained CatGAN-26 4,000 more steps, from its full training state, and moved t
 - **Regenerating instead of porting.** Re-running the fitting scripts on the +4,000 checkpoint took 11 minutes with no manual changes. It restores each patch's guarantees, but at HEAD the regenerated gate stops firing (hue 26°). Its threshold sits one step from a cliff, and locking every cat to light fur pushes the detector's scores past it. Only an in-context test sees this.
 
 The same lesson applies to §4's circuits. They read and write specific hidden channels, so they are implementation patches. After an upstream update they must be refitted, not ported, and then retested in context.
+
+### 5.4 A topology patch in the repository
+
+With the `grow` operator (§3.3), the odd-eye patch of §4.2 becomes one `.weightpatch` file: 11 grow operations, then 13 sparse diffs that wire the new channels (603 entries, 42,548 new parameters). `wpgit build` reproduces the network of §4.2 exactly. In a branch of the cat repository at HEAD, the patch replaces the 2018-style blue-eye circuit (`prune2`, `eye_gate`) and sits next to the two rank-2 locks. Its tests are the specification of §4.2: at least 30% of left irises end in the 200–250° band, no right iris does, the right half of every image is unchanged, and the change outside the eyes stays below 0.015.
+
+- **It passes its tests in context.** Each test compares the full build with the build without the patch, so it runs on cats whose fur and background are locked. On 150 test latents, 34% of left irises end in the band, no right iris does, the right half changes by at most 2.9×10⁻⁶ (float32 rounding; the bound is 10⁻⁵) and the rest of the image by 1.2×10⁻⁴ on average. Both locks still pass (variance ratios 0.099 and 0.114, against 0.3).
+- **It commutes with the locks exactly.** The grow operations and the locks both write the dense layer, so `wpgit check` builds both orders. The locks act on the dense layer's input side, the latent; the wire adds new output columns, which a lock leaves at zero. The two orders give identical weights (difference 0).
+- **Rebase needs a wider notion of context.** A grown channel writes only new entries, which no upstream update can move, so the rule that caught `prune2` (§5.3) would never fire. But the iris gate reads existing b5c1 features. `wpgit rebase` therefore treats every base layer up to the one a grown channel reads from as that channel's context. The further-trained checkpoints of §5.3 were not kept, so we checked the rule on two synthetic updates: scaling the output layer's kernel by 0.1% leaves the patch clean, and scaling b3c1's kernel by 0.1% marks it stale. The wire reads only its own carriers, so on its own, like the locks, it would be an interface patch.
+
+The two halves of this paper meet here: a patch that changes the architecture is versioned, tested in context and merge-checked like the fixed-architecture patches around it.
 
 ## 6. Old checkpoints as legacy code
 
@@ -532,7 +547,7 @@ Patches cannot create features the network lacks. The guard bounds TinySR-18A's 
 
 **What this unlocks next.**
 - *Verified detectors.* The weak part of every circuit is a fitted detector (42–48% of irises). Verifiers [41] and provable repair [39] could certify the detectors, as the identities already certify the wiring.
-- *Topology in the patch format.* Grow, insert and branch operators would let `wpgit` version, test and rebase §4's patches as it does the fixed-architecture ones.
+- *Topology in the patch format.* Growth is now an operator (§5.4); insert and branch operators would bring the guard and the union under `wpgit` too.
 - *Larger models.* The identities need piecewise-linear activations. The GELU and SwiGLU of most language models are not piecewise linear, so exact circuits there must be added beside them, as ReLU units in grown room. The union and exception patterns need only a linear readout.
 - *Agents writing weights in context.* Takehi et al. [1] show LLMs writing weights directly. A shared instruction set and tests would let such edits be checked and kept.
 
@@ -570,6 +585,7 @@ The person set goals and specifications. The agent wrote the fitting and compili
 - **Compactness.** Joint retraining resolves the merge conflict at one network's size; the union needs three.
 - **Detectors.** Every circuit contains a fitted detector, and fitted detectors are imperfect: 42–48% of irises, blue streaks on fur, an exception unit that fires on 106 non-cats.
 - **Composition without tests.** Patches interact, merge silently into conflicts and go stale (§5). Gradient descent at least optimises everything jointly.
+- **Fitting a given structure.** Given the exception unit's structure and the same data, Adam fits it as well as the closed-form rule, if the learning rate is right (§4.5). The patches' advantage is their structure, not the absence of gradients.
 
 The two are complementary. A fine-tune can be guarded, an exception can sit on a fine-tuned head, and a union can hold networks that were each trained well.
 
@@ -577,7 +593,7 @@ The two are complementary. A fine-tune can be guarded, an exception can sit on a
 
 - **Scale.** The models have 0.25M–8.1M parameters. The identities are exact at any size, but we have not tested circuits in large models or in transformers.
 - **Small and partly synthetic tests.** Generator attributes are pixel heuristics. The TinySR-18A gate uses 5 regression and 7 edge-case images, and its guard was calibrated on 9. Each 2026 model was trained once, with one seed.
-- **Topology patches are scripts.** §4's patches change layer widths and add layers. They are built and tested by their scripts but are not yet operators in the patch format, so `wpgit` cannot rebase them.
+- **Only growth is an operator.** The odd-eye patch is versioned, tested and merge-checked by `wpgit` (§5.4), and its rebase rule was checked only on synthetic updates. The guard's inserted layers and the union's branches are still built and tested by their scripts.
 - **Choices made after failures.** Several patches were changed after a test failed (Table 11). Every choice was made on fitting or calibration data, and the earlier versions are reported.
 - **The agent works through tools.** The agent wrote code that computes the patches; it did not write raw weights in its context window, as in [1]. The constants it wrote by hand (Table 3) are wiring, not learned values.
 - **Environment.** The synthetic sprite tests are drawn with Pillow, whose rasteriser changed between versions. All numbers come from the pinned environment (Appendix A).
@@ -598,7 +614,7 @@ A trained network does not have to be a sealed artifact. With a handful of exact
 - put competing networks side by side behind a self-checking switch;
 - add an exception that is exactly silent where it does not fire.
 
-Each patch is fitted in seconds to minutes from hundreds to a few thousand examples, and none is something gradient descent on the trained model would write. They do not replace training, which still learns the features and wins when data is plentiful. They add a layer on top of it, and that layer needs software engineering: tests run in context, merge checks and rebases.
+Each patch is fitted in seconds to minutes from hundreds to a few thousand examples, and none is something gradient descent would write into the trained model's fixed architecture. Given a patch's structure, gradient descent can fit its parts, as it fits the exception unit: the structure is what the agent adds. They do not replace training, which still learns the features and wins when data is plentiful. They add a layer on top of it, and that layer needs software engineering: tests run in context, merge checks and rebases.
 
 ## Author contributions and AI disclosure
 
@@ -670,7 +686,7 @@ Each patch is fitted in seconds to minutes from hundreds to a few thousand examp
 
 [28] X. Han, Z. Wang, B. Zhao, B. Zhang, J. Li, D. Borth, R. Yu, H. Maron, Y. Ye, L. Yin, F. Neri. A Survey of Weight Space Learning: Understanding, Representation, and Generation. arXiv:2603.10090, 2026.
 
-[29] Z. Wang, K. Wang, P. Wang. Position: Weight Space Should Be a First-Class Generative AI Modality. ICML 2026.
+[29] Z. Wang, P. Wang, K. Wang. Position: Weight Space Should Be a First-Class Generative AI Modality. ICML 2026.
 
 [30] E. Mitchell, C. Lin, A. Bosselut, C. Finn, C. D. Manning. Fast Model Editing at Scale. ICLR 2022.
 
@@ -702,6 +718,14 @@ Each patch is fitted in seconds to minutes from hundreds to a few thousand examp
 
 [44] C. Kästner. Machine Learning in Production: From Models to Products. MIT Press, 2025.
 
+[45] F. Fu, W. Li. Sound and Complete Neural Network Repair with Minimality and Locality Guarantees. ICLR 2022.
+
+[46] M. Li, S. Gururangan, T. Dettmers, M. Lewis, T. Althoff, N. A. Smith, L. Zettlemoyer. Branch-Train-Merge: Embarrassingly Parallel Training of Expert Language Models. arXiv:2208.03306, 2022.
+
+[47] S. Sukhbaatar, O. Golovneva, V. Sharma, H. Xu, X. V. Lin, B. Rozière, J. Kahn, D. Li, W. Yih, J. Weston, X. Li. Branch-Train-MiX: Mixing Expert LLMs into a Mixture-of-Experts LLM. arXiv:2403.07816, 2024.
+
+[48] R. Liu, J. Lehman, P. Molino, F. P. Such, E. Frank, A. Sergeev, J. Yosinski. An Intriguing Failing of Convolutional Neural Networks and the CoordConv Solution. NeurIPS 2018.
+
 ## Appendix A: Reproducing the results
 
 Code, results, the 2017–2020 checkpoints and the git histories are in the accompanying repository, https://github.com/v-code-895/wsse, archived on Zenodo at https://doi.org/10.5281/zenodo.23956114 (all versions). The code is MIT-licensed. Model weights and figures are CC BY-NC 4.0, because TinySR-26 and CatGAN-26 are trained on AFHQ. Run every script from the repository root, for example `python src/exp18_circuit_primitives.py`.
@@ -724,6 +748,7 @@ Code, results, the 2017–2020 checkpoints and the git histories are in the acco
 | §5.1 | `cat_domain.py`, `exp13_catgan26_patches.py`, `exp15_subspace_locks.py` | `exp13_out/`, `exp15_out/` |
 | §5.2, Figure 10 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat`), `make_figure1.py` | `exp5_cat_subspace_out/`, `exp5_cat_out/`, `figure1/` |
 | §5.3 | `exp17_rebase.py` | `exp17_out/` |
+| §5.4 | `wpgit.py`, `exp24_odd_eyes_wpgit.py` (uses `exp20_odd_eyes.py`) | `exp24_out/` |
 | §6 | `extract_and_audit.py`, `exp7_blind_audit.py`, `exp7b_recycle_bot.py`, `exp8_mobilenet.py`, `exp8b_oracle.py`, `exp6_tinysr18_pair_transfer.py`, `exp3_anime_weightpatch.py`, `exp4_anime_eye_circuit.py`, `exp5_git_demo.py` | `audit/`, `exp7_out/`, `exp8_out/`, `exp6_out/`, `exp3_out/`, `exp4_out/`, `exp5_out/` |
 
 Base hashes: CatGAN-26 `be2b16ff52fc4021`, TinySR-26 2× `8cb6601c1b449ffc`, Anime-DCGAN `145ec232ed8a91e5`, TinySR-18A `3c0f6f6dc471e183`.
@@ -731,7 +756,7 @@ Base hashes: CatGAN-26 `be2b16ff52fc4021`, TinySR-26 2× `8cb6601c1b449ffc`, Ani
 **What was re-run from the repository.**
 - **CPU experiments.** Before the first release, every CPU experiment (`scripts/reproduce_cpu.sh`) and the three git demos were re-run from the repository layout. They are identical to the original outputs, apart from runtimes, git commit ids and reworded labels.
 - **GPU experiments.** These were run once on the original machine, and their outputs are included as produced.
-- **The circuit experiments (exp18–exp23)** were run from the repository for this version. Exp23 caches MobileNetV2 features in `results/exp23_out/features.npz`, which is not committed; it is rebuilt on the first run, in about ten minutes on a CPU.
+- **The circuit experiments (exp18–exp24)** were run from the repository; exp23 was re-run for this version with the Adam-trained units, and its earlier rows did not change apart from timings. Exp23 caches MobileNetV2 features in `results/exp23_out/features.npz`, which is not committed; it is rebuilt on the first run, in about ten minutes on a CPU.
 
 ## Appendix B: Additional results
 

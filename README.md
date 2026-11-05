@@ -1,4 +1,4 @@
-# Beyond Gradient Descent
+# Beyond Fixed Architectures
 
 **An LLM agent rewires trained neural networks with exact, tested patches.**
 
@@ -230,15 +230,21 @@ classifier,
 \mathrm{logits}' = \mathrm{logits} + \beta\,\mathrm{relu}(w\cdot\phi + c - \theta)\,\mathbf{1}_{\text{cats}},
 ```
 
-fitted in 0.35 s. Wherever it does not fire, the logits are exactly the original's.
+fitted in 0.17 s. Wherever it does not fire, the logits are exactly the original's.
 
 | fix (500 validation images per class) | cat errors fixed | dog predictions changed | wild-animal predictions changed |
 |---|---|---|---|
-| **exception unit** (1,287 parameters) | **22/23** | **0** | **1** |
+| **exception unit** (1,287 parameters), closed form | **22/23** | **0** | **1** |
+| the same unit trained by Adam, preservation loss, lr 10⁻² | 22/23 | 0 | 0 |
+| the same unit trained by Adam, errors only, lr 10⁻³ | 23/23 | 166 | 145 |
 | head fine-tune with a preservation loss | 22/23 | 2 | 2 |
 | head fine-tune on the errors only | 23/23 | 377 (375 now "cat") | 338 (336 now "cat") |
 
 ![Every cat MobileNetV2 gets wrong, before and after](paper/figures/fig_exception.png)
+
+Gradient descent on the same one-unit structure does as well when it gets the same preservation data and
+the right learning rate (lr 10⁻³ leaves it firing on 975 of the 1,000 animals). What the patch adds is the
+structure, a unit that is exactly silent where it is off; once it exists, gradient descent can fit it.
 
 *All 23 cats MobileNetV2 gets wrong, with its top-1 class before → after the patch. The one it leaves
 (red) is a wild cat, apparently a clouded leopard, that AFHQ files under cats. Last (orange): the one
@@ -266,6 +272,11 @@ lock on fur lightness; HEAD, where every test passes. Same latents in every row.
 
 *The same eight latents under one-direction and rank-2 locks: the rank-1 fur-lightness lock still lets
 a black cat through; at rank 2 every cat is light.*
+
+With a `grow` operator, a topology patch joins the same repository. The odd-eye patch becomes one file
+of 11 grow operations and 13 sparse wirings; in a branch where it replaces the 2018 blue-eye circuit, it
+passes its tests next to the rank-2 locks (34% of left irises blue, right half unchanged to 2.9×10⁻⁶)
+and commutes with them exactly.
 
 When the base model trains 4,000 more steps, `wpgit rebase` moves the repository onto each new
 checkpoint. Patches written against an interface (the latent) survive; patches written against an
@@ -373,6 +384,7 @@ data/           third-party datasets (not in git; see DATA.md)
 | §5.1 | `cat_domain.py`, `exp13_catgan26_patches.py`, `exp15_subspace_locks.py` | `exp13_out/`, `exp15_out/` | GPU, CatGAN-26 |
 | §5.2, Figure 10 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat`), `make_figure1.py` | `exp5_cat_subspace_out/`, `exp5_cat_out/`, `figure1/` | GPU, CatGAN-26 |
 | §5.3 | `exp17_rebase.py` | `exp17_out/` | GPU, CatGAN-26 training checkpoint |
+| §5.4 | `wpgit.py`, `exp24_odd_eyes_wpgit.py` | `exp24_out/` | GPU, CatGAN-26 |
 | §6 | `extract_and_audit.py`, `exp7_blind_audit.py`, `exp7b_recycle_bot.py`, `exp8_mobilenet.py`, `exp8b_oracle.py`, `exp6_tinysr18_pair_transfer.py`, `exp3_anime_weightpatch.py`, `exp4_anime_eye_circuit.py`, `exp5_git_demo.py` | `audit/`, `exp7_out/`, `exp8_out/`, `exp6_out/`, `exp3_out/`, `exp4_out/`, `exp5_out/` | CPU, MobileNetV2 |
 
 Not discussed in the paper: `exp7c_deep_color.py` and the Deep-Color parts of `exp7_blind_audit.py`
@@ -400,7 +412,7 @@ to the latest version). See also [`CITATION.cff`](CITATION.cff).
 
 ```bibtex
 @misc{upatising2026beyond,
-  title  = {Beyond Gradient Descent: An {LLM} Agent Rewires Trained Neural Networks with Exact, Tested Patches},
+  title  = {Beyond Fixed Architectures: An {LLM} Agent Rewires Trained Neural Networks with Exact, Tested Patches},
   author = {Upatising, Voravee and {Claude (Anthropic; model Claude Opus 5.5)}},
   year   = {2026},
   doi    = {10.5281/zenodo.23956114},

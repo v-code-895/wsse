@@ -1,9 +1,25 @@
 # Changelog
 
-## Unreleased
+## v2.1.0 — 2026-11-05
 
-- `CITATION.cff` now carries the paper's title and a summary of its abstract, so the next Zenodo version
-  shows them. The v2.0.0, v2.0.1 and v2.0.2 Zenodo records' titles and descriptions were edited to match.
+Reviewer feedback: the structure, not the absence of gradients, and one story for both halves of the paper.
+
+- New title: *Beyond Fixed Architectures: An LLM Agent Rewires Trained Neural Networks with Exact, Tested
+  Patches*. §4 is now "Patches that change the architecture".
+- `exp23`: the exception unit's structure trained by Adam (two objectives, two learning rates). With the
+  preservation loss at lr 1e-2 it does as well as the closed-form fit (22/23 fixed, no other prediction
+  changed); at lr 1e-3 it fires on 975 of 1,000 animals; on the errors alone it turns 311-999 of them into
+  cats. The paper now says the gain is the structure (§4.5, §7.3, §8). The earlier rows are unchanged;
+  their timings were re-measured (0.17 s for the closed-form fit).
+- `wpgit`: a `grow` operator (k channels with zero incoming and outgoing weights), in-context tests for
+  one-sided eye hue and half-image invariance, and a rebase rule that marks a grown channel stale when the
+  base layers it reads from move.
+- `exp24`: the odd-eye patch as a `.weightpatch` (11 grow ops, 13 sparse diffs) in the cat repository, in
+  place of the 2018 blue-eye circuit. It passes its tests next to the rank-2 locks and commutes with them
+  exactly (new §5.4).
+- §2: REASSURE, CoordConv, Branch-Train-Merge and Branch-Train-MiX [45-48]; [29]'s author order fixed.
+- `CITATION.cff` now carries the paper's title and a summary of its abstract, so Zenodo shows them.
+- The CPU engine infers the channel count after the dense layer's reshape, so grown networks run there too.
 
 ## v2.0.2 — 2026-11-05
 

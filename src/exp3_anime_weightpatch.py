@@ -39,7 +39,7 @@ def conv2d_same_b(x, K, b):
 def apply_op_b(x, op, W):
     t = op["op"]
     if t == "dense": return x @ W[op["name"] + "/kernel"] + W[op["name"] + "/bias"]
-    if t == "reshape": return x.reshape((-1,) + tuple(op["shape"]))
+    if t == "reshape": return x.reshape((len(x),) + tuple(op["shape"][:-1]) + (-1,))   # channels inferred: grown layers
     if t == "up": return x.repeat(op["size"][0], 1).repeat(op["size"][1], 2)
     if t == "conv": return conv2d_same_b(x, W[op["name"] + "/kernel"], W[op["name"] + "/bias"])
     if t == "lrelu": return np.where(x >= 0, x, np.float32(op["alpha"]) * x)

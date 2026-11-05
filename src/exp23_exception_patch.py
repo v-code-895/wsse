@@ -12,9 +12,14 @@ fixes the fitting errors where the unit fires. Where the unit is off (w . phi + 
 logits are exactly the base model's: the patch is local by construction, and the network can
 report, per input, whether it fired.
 
-Baselines on the same fitting images, head only (1280 x 1000 + bias), Adam:
-  * fine-tune with preservation: -log P(cat classes) on cats + KL(base || new) on dogs and wild;
-  * fine-tune on the errors only (the quick fix).
+Baselines on the same fitting images, Adam for 300 steps:
+  * the head (1280 x 1000 + bias) fine-tuned with preservation: -log P(cat classes) on cats + KL(base || new)
+    on dogs and wild;
+  * the head fine-tuned on the errors only (the quick fix);
+  * the same one-unit branch as the patch (1,281 input weights and 5 output weights), trained by Adam
+    instead of fitted in closed form, with each of the two objectives above and two learning rates.
+    This separates the structure (a new gated unit beside the classifier) from the fitting rule
+    (a ridge probe with its threshold at the largest fitting non-cat score).
 
   <venv python> src/exp23_exception_patch.py
 """
@@ -64,6 +69,23 @@ def head_finetune(F_, L0, Wh, bh, cat_idx, keep_idx, steps, lr, preserve, seed=0
     torch.cuda.synchronize()
     return W.detach().cpu().numpy(), b.detach().cpu().numpy(), time.time() - t0
 
+def unit_finetune(F_, L0, cat_idx, keep_idx, steps, lr, preserve, seed=0):
+    """The patch's structure, trained by gradient descent: logits' = logits + v * relu(w . [phi, 1]) on the
+    cat classes. w starts small and random, v at zero (so the base model is unchanged at step 0)."""
+    import torch
+    torch.manual_seed(seed); dev = "cuda"
+    X = torch.tensor(np.c_[F_, np.ones(len(F_))], dtype=torch.float32, device=dev); L = torch.tensor(L0, dtype=torch.float32, device=dev)
+    w = (0.01 * torch.randn(X.shape[1], device=dev)).requires_grad_(); v = torch.zeros(len(CATS), device=dev, requires_grad=True)
+    P0 = torch.softmax(L, 1); ci, ki = torch.tensor(cat_idx, device=dev), torch.tensor(keep_idx, device=dev); cats = torch.tensor(CATS, device=dev)
+    opt = torch.optim.Adam([w, v], lr=lr); t0 = time.time()
+    for _ in range(steps):
+        z = L.clone(); z[:, cats] = z[:, cats] + torch.relu(X @ w)[:, None] * v[None]; logp = torch.log_softmax(z, 1)
+        loss = -torch.logsumexp(logp[ci][:, cats], 1).mean()
+        if preserve and len(ki): loss = loss + (P0[ki] * (torch.log(P0[ki] + 1e-12) - logp[ki])).sum(1).mean()
+        opt.zero_grad(); loss.backward(); opt.step()
+    torch.cuda.synchronize()
+    return w.detach().cpu().numpy().astype(np.float64), v.detach().cpu().numpy().astype(np.float64), time.time() - t0
+
 def main(write=True):
     """write=False returns the image lists, logits and the patch without writing (for make_figures_v2.py)."""
     sys.stdout.reconfigure(encoding="utf-8"); os.makedirs(OUT, exist_ok=True); t_all = time.time()
@@ -106,10 +128,26 @@ def main(write=True):
     cat_idx = np.nonzero(yf == 0)[0]; keep_idx = np.nonzero(yf != 0)[0]
     Wp, bp, s_pres = head_finetune(Ff.astype(np.float32), Lf.astype(np.float32), Wh.astype(np.float32), bh.astype(np.float32), cat_idx, keep_idx, 300, 1e-3, True)
     We, be, s_err = head_finetune(Ff.astype(np.float32), Lf.astype(np.float32), Wh.astype(np.float32), bh.astype(np.float32), np.nonzero(bad)[0], [], 300, 1e-3, False)
+    units = {}
+    for obj, ci_, ki_, pres in (("errors only", np.nonzero(bad)[0], [], False), ("with preservation", cat_idx, keep_idx, True)):
+        for lr in (1e-3, 1e-2):
+            wu, vu, su = unit_finetune(Ff, Lf, ci_, ki_, 300, lr, pres)
+            units[f"one unit trained by Adam, {obj}, lr {lr:g}"] = (wu, vu, su)
+    def unit(wu, vu):
+        def f(F_, L_):
+            h = np.maximum(np.c_[F_, np.ones(len(F_))] @ wu, 0); Lp = L_.copy(); Lp[:, CATS] += h[:, None] * vu[None]; return Lp, h > 0
+        return f
+    R["unit_adam_fit_nonfiring"] = {}
+    for name, (wu, vu, su) in units.items():
+        hf = np.maximum(np.c_[Ff, np.ones(len(Ff))] @ wu, 0)
+        R["unit_adam_fit_nonfiring"][name] = {"fires_on_fitting_noncats": int((hf[yf != 0] > 0).sum()), "of": int((yf != 0).sum()),
+                                             "fires_on_fitting_cats": int((hf[yf == 0] > 0).sum())}
     variants = {"base": lambda F_, L_: (L_, np.zeros(len(L_), bool)), "exception unit": patched,
                 "head fine-tune, with preservation": lambda F_, L_: (F_ @ Wp + bp, None),
                 "head fine-tune, errors only": lambda F_, L_: (F_ @ We + be, None)}
+    variants.update({name: unit(wu, vu) for name, (wu, vu, su) in units.items()})
     seconds = {"exception unit": fit_seconds, "head fine-tune, with preservation": s_pres, "head fine-tune, errors only": s_err}
+    seconds.update({name: su for name, (wu, vu, su) in units.items()})
 
     # --- evaluation on the validation images ----------------------------------------------------
     P0 = softmax(Lv); R["val"] = {}

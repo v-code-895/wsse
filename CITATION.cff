@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software or its results, please cite the paper below."
-title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
+title: "Beyond Fixed Architectures: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
 abstract: >-
   Code, patches, git histories, models and paper. Gradient descent changes the values of a network's
   weights inside an architecture fixed before training. Here an LLM coding agent (Claude Opus 5.5,
@@ -17,7 +17,7 @@ abstract: >-
   and rebases under git; the repository's name, WSSE, stands for weight-space software engineering.
   Paper: https://v-code-895.github.io/wsse/
 type: software
-version: "2.0.2"
+version: "2.1.0"
 date-released: "2026-11-05"
 license: MIT
 doi: 10.5281/zenodo.23956114
@@ -38,7 +38,7 @@ keywords:
 repository-code: "https://github.com/v-code-895/wsse"
 preferred-citation:
   type: report
-  title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
+  title: "Beyond Fixed Architectures: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
   authors:
     - given-names: Voravee
       family-names: Upatising

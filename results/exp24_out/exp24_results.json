@@ -1,0 +1,51 @@
+{
+ "patch_fitted_on_base": {
+  "grow_ops": 11,
+  "sparse_ops": 13,
+  "entries": 603,
+  "params_added": 42548,
+  "rebuild_max_err_vs_exp20": 0.0,
+  "exp20_left_share": 0.41605839416058393,
+  "exp20_right_share": 0.0,
+  "quantile": 0.98
+ },
+ "test_fitted_on_base": {
+  "pass": true,
+  "table": "model hash a8c7f2d50ae04911\n| patch | test | value | bound | result |\n|---|---|---|---|---|\n| left_eye_blue | left irises in 200-250 deg (share) | 0.341 | min=0.3 | PASS |\n| left_eye_blue | right irises in 200-250 deg (share) | 0.000 | max=0.0 | PASS |\n| left_eye_blue | max change, right half | 2.9e-06 | max=1e-05 | PASS |\n| left_eye_blue | rest-of-image MAE | 1.2e-04 | max=0.015 | PASS |\n| lock_background | var ratio background vs base | 0.114 | max=0.3 | PASS |\n| lock_fur_lightness | var ratio fur_lightness vs base | 0.099 | max=0.3 | PASS |\nALL TESTS PASS"
+ },
+ "check_fitted_on_base": {
+  "conflicts": false,
+  "table": "| patch A | patch B | shared tensors | max weight diff A\u2218B vs B\u2218A | verdict |\n|---|---|---|---|---|\n| left_eye_blue | lock_background | dense/bias,dense/kernel | 0.0e+00 | commutes (numerically) |\n| left_eye_blue | lock_fur_lightness | dense/bias,dense/kernel | 0.0e+00 | commutes (numerically) |\n| lock_background | lock_fur_lightness | dense/bias,dense/kernel | 2.4e-07 | commutes (numerically) |\n0 semantic conflict(s)"
+ },
+ "rebase_synthetic": {
+  "output layer only": {
+   "left_eye_blue": {
+    "drift": 0.0,
+    "stale": false
+   },
+   "lock_fur_lightness": {
+    "drift": null,
+    "stale": false
+   },
+   "lock_background": {
+    "drift": null,
+    "stale": false
+   }
+  },
+  "a layer the gate reads (b3c1)": {
+   "left_eye_blue": {
+    "drift": 0.0010000540131224736,
+    "stale": true
+   },
+   "lock_fur_lightness": {
+    "drift": null,
+    "stale": false
+   },
+   "lock_background": {
+    "drift": null,
+    "stale": false
+   }
+  }
+ },
+ "seconds_total": 46.30444693565369
+}

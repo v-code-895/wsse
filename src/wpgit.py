@@ -13,7 +13,12 @@ Commands (run from anywhere, pass the repo path):
     python src/wpgit.py rebase <repo> <weights>
                                    move the repo onto new base weights (an upstream update):
                                    re-pin base.json and every patch, and mark patches whose
-                                   context changed (sparse ops whose target entries moved)
+                                   context changed (sparse ops whose target entries moved, and
+                                   grown channels whose input features moved)
+
+Operators: latent_shift and latent_clamp (folded into the first dense layer), sparse_add (a sparse
+difference) and grow, which adds k channels to a layer with zero incoming and outgoing weights (an
+exact no-op that changes layer widths; later sparse_add ops in the same patch wire the new channels).
 
 base.json may name a test domain module ("domain": "cat_domain") providing ATTRS, attributes,
 run, eye_mask and score; without it the 2018 Anime-DCGAN tests (exp3/exp4) are used.
@@ -48,13 +53,31 @@ def touches(patch):
         if op["type"] == "latent_shift": t.add(op["layer"] + "/bias")
         elif op["type"] == "latent_clamp": t |= {op["layer"] + "/kernel", op["layer"] + "/bias"}
         elif op["type"] == "sparse_add": t.add(op["tensor"])
+        elif op["type"] == "grow": t |= {op["producer"] + "/kernel", op["producer"] + "/bias", op["consumer"] + "/kernel"}
         else: raise ValueError(op["type"])
     return t
+
+def grow(W, producer, consumer, k):
+    """Add k output channels to `producer` (zero incoming weights, zero bias) and k zero input slices to
+    `consumer`: the network computes exactly the same function. A dense producer feeding a conv is laid
+    out as (cells, C) per row, so each new channel gets one column per spatial cell."""
+    W = dict(W); K, b, Kc = W[producer + "/kernel"], W[producer + "/bias"], W[consumer + "/kernel"]; C = Kc.shape[2]
+    if K.ndim == 2:
+        cells = K.shape[1] // C
+        W[producer + "/kernel"] = np.concatenate([K.reshape(K.shape[0], cells, C), np.zeros((K.shape[0], cells, k), K.dtype)], 2).reshape(K.shape[0], -1)
+        W[producer + "/bias"] = np.concatenate([b.reshape(cells, C), np.zeros((cells, k), b.dtype)], 1).reshape(-1)
+    else:
+        W[producer + "/kernel"] = np.concatenate([K, np.zeros(K.shape[:3] + (k,), K.dtype)], 3)
+        W[producer + "/bias"] = np.concatenate([b, np.zeros(k, b.dtype)])
+    W[consumer + "/kernel"] = np.concatenate([Kc, np.zeros(Kc.shape[:2] + (k, Kc.shape[3]), Kc.dtype)], 2)
+    return W
 
 def apply_patch(W, patch, ops):
     for op in patch["ops"]:
         one = {"ops": [op]}
-        W = e4.apply_weightpatch(W, one) if op["type"] == "sparse_add" else e3.apply_weightpatch(W, one, ops)
+        if op["type"] == "grow": W = grow(W, op["producer"], op["consumer"], op["k"])
+        elif op["type"] == "sparse_add": W = e4.apply_weightpatch(W, one)
+        else: W = e3.apply_weightpatch(W, one, ops)
     return W
 
 def load_repo(repo):
@@ -114,9 +137,32 @@ def run_tests(W0, ops, P):
         drop = closure(P, pid)
         x_wo = DOMAIN.run(z, build(W0, ops, P, [i for i in full_ids if i not in drop]), ops)
         A_wo = DOMAIN.attributes(x_wo)
-        eye = DOMAIN.score(x_full, x_wo, DOMAIN.eye_mask(x_wo)) if any(t["type"] in ("eye_hue", "rest_mae") for t in tests) else None
+        m_wo = DOMAIN.eye_mask(x_wo) if any(t["type"] in ("eye_hue", "rest_mae", "eye_band_share") for t in tests) else None
+        eye = DOMAIN.score(x_full, x_wo, m_wo) if m_wo is not None else None
+        def side(m, s):                      # restrict an image mask to the left or right half
+            if s is None: return m
+            m = m.copy(); h = m.shape[2] // 2
+            if s == "left": m[:, :, h:] = False
+            else: m[:, :, :h] = False
+            return m
         for t in tests:
             k = t["type"]
+            if k == "eye_hue" and t.get("side"):
+                v, label = DOMAIN.score(x_full, x_wo, side(m_wo, t["side"]))["eye_hue"], f"{t['side']} eye hue (deg)"
+                ok = (t.get("min", -np.inf) <= v <= t.get("max", np.inf)); ok_all &= ok
+                rows.append((pid, label, v, " ".join(f"{b}={t[b]}" for b in ("min", "max") if b in t), ok)); continue
+            if k == "eye_band_share":        # share of cats whose iris on that side ends in the hue band
+                m = side(m_wo, t.get("side")); ok_i = m.sum((1, 2)) >= 8
+                hues = np.array([e4.hue(x_full[i][m[i]].mean(0)[None])[0] for i in range(len(m)) if ok_i[i]])
+                v = float(np.mean((hues >= t["lo"]) & (hues <= t["hi"]))) if len(hues) else 0.0
+                label = f"{t.get('side', 'both')} irises in {t['lo']}-{t['hi']} deg (share)"
+                ok = (t.get("min", -np.inf) <= v <= t.get("max", np.inf)); ok_all &= ok
+                rows.append((pid, label, v, " ".join(f"{b}={t[b]}" for b in ("min", "max") if b in t), ok)); continue
+            if k == "half_max_change":       # largest pixel change in one half of the image, against the build without the patch
+                h = x_full.shape[2] // 2; sl = slice(h, None) if t["half"] == "right" else slice(None, h)
+                v = float(np.abs(x_full[:, :, sl] - x_wo[:, :, sl]).max()); label = f"max change, {t['half']} half"
+                ok = v <= t.get("max", np.inf); ok_all &= ok
+                rows.append((pid, label, v, f"max={t['max']}", ok)); continue
             if k == "attr_delta":
                 j = names.index(t["attr"]); v = float((A_full[:, j] - A_wo[:, j]).mean() / sd[j]); label = f"Δ{t['attr']} (SD)"
             elif k == "attr_var_ratio":          # "vs": "base" for absolute claims ("X is locked")
@@ -166,12 +212,26 @@ def rebase(repo, weights, tol=1e-6):
     if json.dumps(ops_old) != json.dumps(ops_new) or any(W_old[k].shape != W_new.get(k, np.empty(0)).shape for k in W_old):
         raise SystemExit("new base has a different architecture: patches cannot be rebased, regenerate them")
     h_old, h_new = base["hash"], weights_hash(W_new); rows = []
+    names = [o["name"] for o in ops_old if o["op"] in ("dense", "conv")]
+    rel = lambda a, b: float(np.abs(b - a).max() / (np.abs(a).max() + 1e-12))
     for f in sorted(glob.glob(os.path.join(repo, "patches", "*.weightpatch.json"))):
-        p = json.load(open(f, encoding="utf-8")); drift = {}
+        p = json.load(open(f, encoding="utf-8")); drift = {}; G_old, G_new = W_old, W_new
+        grown = {op["producer"]: G_old[op["producer"] + "/kernel"].shape for op in p["ops"] if op["type"] == "grow"}
         for op in p["ops"]:
+            if op["type"] == "grow":         # replay growth on both bases so sparse indices line up
+                G_old = grow(G_old, op["producer"], op["consumer"], op["k"]); G_new = grow(G_new, op["producer"], op["consumer"], op["k"]); continue
             if op["type"] != "sparse_add": continue
-            idx = np.array(op["idx"], np.int64); a = W_old[op["tensor"]].reshape(-1)[idx]; b = W_new[op["tensor"]].reshape(-1)[idx]
-            drift[op["tensor"]] = max(drift.get(op["tensor"], 0.0), float(np.abs(b - a).max() / (np.abs(a).max() + 1e-12)))
+            idx = np.array(op["idx"], np.int64); a = G_old[op["tensor"]].reshape(-1)[idx]; b = G_new[op["tensor"]].reshape(-1)[idx]
+            drift[op["tensor"]] = max(drift.get(op["tensor"], 0.0), rel(a, b))
+            # A grown channel that reads existing channels depends on the features those channels carry,
+            # so its context is every base layer up to the one that produces them.
+            layer = op["tensor"].rsplit("/", 1)[0]
+            if op["tensor"].endswith("/kernel") and layer in grown and len(op["shape"]) == 4:
+                _, _, cin, cout = np.unravel_index(idx, op["shape"]); s0 = grown[layer]
+                if np.any((cout >= s0[3]) & (cin < s0[2]) & (np.array(op["val"]) != 0)):
+                    up = names[:names.index(layer)]
+                    ctx = max(rel(W_old[n + s], W_new[n + s]) for n in up for s in ("/kernel", "/bias"))
+                    drift[f"features read by {layer}"] = max(drift.get(f"features read by {layer}", 0.0), ctx)
         stale = {k: round(v, 6) for k, v in drift.items() if v > tol}
         p["base"] = h_new; p.setdefault("rebased_from", []).append(h_old); p.pop("stale_context", None)
         if stale: p["stale_context"] = stale
@@ -209,7 +269,9 @@ def main(argv=None):
         rows, ok, h = run_tests(W0, ops, P)
         print(f"model hash {h}")
         print("| patch | test | value | bound | result |\n|---|---|---|---|---|")
-        for pid, label, v, bound, r in rows: print(f"| {pid} | {label} | {v:.3f} | {bound} | {'PASS' if r else 'FAIL'} |")
+        for pid, label, v, bound, r in rows:
+            vs = f"{v:.3f}" if v == 0 or abs(v) >= 1e-3 else f"{v:.1e}"
+            print(f"| {pid} | {label} | {vs} | {bound} | {'PASS' if r else 'FAIL'} |")
         print("ALL TESTS PASS" if ok else "TESTS FAILED")
         return 0 if ok else 1
     if a.cmd == "check":

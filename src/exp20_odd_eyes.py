@@ -91,11 +91,12 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8"); os.makedirs(OUT, exist_ok=True)
     for room in ("free", "grow"): run_room(room)
 
-def run_room(room, write=True):
+def run_room(room, write=True, W0=None):
     """Build and measure the patches for one kind of room. write=False skips the result files and
-    returns the patched networks and images (for make_figures_v2.py)."""
+    returns the patched networks and images (for make_figures_v2.py and exp24)."""
     t_start = time.time(); print(f"=== room by {room} ===", flush=True)
-    W0 = {k: v.astype(np.float32) for k, v in np.load("results/exp11_out/catgan26.npz").items()}; L = catgan_layers(W0)
+    if W0 is None: W0 = {k: v.astype(np.float32) for k, v in np.load("results/exp11_out/catgan26.npz").items()}
+    L = catgan_layers(W0)                                            # W0: another base, e.g. a build with latent locks (exp24)
     rng = np.random.default_rng(0); z_free, z_fit, z_test = (rng.standard_normal((n, 128)) for n in (256, 300, 300))
     names = [l[1] for l in L if l[0] in ("dense", "conv")]           # dense, b1c1 ... b5c2, out
     chain = names[:names.index("b5c1") + 1]                          # producers that carry the wire

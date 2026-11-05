@@ -1,14 +1,21 @@
 cff-version: 1.2.0
 message: "If you use this software or its results, please cite the paper below."
-title: "Weight-Space Software Engineering (WSSE): circuit patches, wpgit and .weightpatch"
+title: "Beyond Gradient Descent: An LLM Agent Rewires Trained Neural Networks with Exact, Tested Patches"
 abstract: >-
-  An LLM agent rewires small trained neural networks with exact, tested patches. Exact identities of
-  (Leaky)ReLU activations carry signals, gate, bound and switch inside a trained network; room comes
-  from freeing channels by regression or growing them with zero outgoing weights. Patches compile
-  logic into a cat GAN (odd-eyed cats), give a 2018 super-sampler a provable output bound, resolve a
-  fine-tune merge conflict with a self-checking routed union, and fix a classifier with a local
-  exception. Patches are hash-pinned, self-testing text files that wpgit builds, tests in context,
-  merge-checks and rebases under git.
+  Code, patches, git histories, models and paper. Gradient descent changes the values of a network's
+  weights inside an architecture fixed before training. Here an LLM coding agent (Claude Opus 5.5,
+  directed by a person) rewires small trained networks after training instead. It writes patches out
+  of exact identities of the (Leaky)ReLU activations the networks already use, which carry, gate,
+  bound and switch signals, and makes room for them by freeing channels by regression or by growing
+  channels with zero outgoing weights. On four small models the patches do what training the model
+  does not: a coordinate wire and an AND gate give a cat GAN odd-eyed cats while the other half of
+  every image moves by at most 1.6e-7; a reference path and a min-gate repair a 2018 super-sampler
+  with an output bound that holds on every input; a self-checking router resolves a fine-tune merge
+  conflict (+0.23 / +3.26 / +0.00 dB, against +0.03 / +3.19 / +0.08 for joint retraining); and one
+  gated unit fixes 22 of 23 MobileNetV2 cat errors while changing 1 of 1,000 other predictions.
+  Patches are hash-pinned, self-testing text files that wpgit builds, tests in context, merge-checks
+  and rebases under git; the repository's name, WSSE, stands for weight-space software engineering.
+  Paper: https://v-code-895.github.io/wsse/
 type: software
 version: "2.0.2"
 date-released: "2026-11-05"

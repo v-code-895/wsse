@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `CITATION.cff` now carries the paper's title and a summary of its abstract, so the next Zenodo version
+  shows them. The v2.0.2 Zenodo record's title and description were edited to match.
+
 ## v2.0.2 — 2026-11-05
 
 - The README is now a tour of the paper: the idea, each result with its figure and table (11 figures),

@@ -43,7 +43,7 @@ pre code { background: none; padding: 0; }
 table { border-collapse: collapse; margin: 2.5mm auto; font-size: 8.4pt; line-height: 1.3; break-inside: avoid; max-width: 100%; }
 th, td { border: 1px solid var(--rule); padding: 0.8mm 1.6mm; vertical-align: top; }
 th { background: var(--head); text-align: left; }
-img { display: block; max-width: 100%; margin: 3mm auto 1mm; break-inside: avoid; }
+img { display: block; max-width: 100%; max-height: 120mm; margin: 3mm auto 1mm; break-inside: avoid; }
 p:has(> img) + p > em:only-child { display: block; text-align: center; font-size: 9pt; color: var(--muted); }
 a { color: var(--link); text-decoration: none; }
 mjx-container[display="true"] { margin: 2mm 0 !important; }

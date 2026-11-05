@@ -37,6 +37,14 @@ def acts_after(z, W, L, producer, a=0.2, chunk=32):
                 else: x = F.conv2d(x, T[l[1] + "/kernel"], T[l[1] + "/bias"], padding=1)
             yield x.permute(0, 2, 3, 1).reshape(-1, x.shape[1]).double().cpu().numpy()
 
+def fold_and_zero(W, producer, consumer, G, drop, cells=None):
+    """Free `drop` by the ridge regression fold, and (the baseline) by zeroing without a fold."""
+    C = G.shape[0] - 1; keep = [c for c in range(C) if c not in drop]; idx = keep + [C]
+    lam = 1e-6 * np.trace(G[:C, :C]) / C
+    B = np.linalg.solve(G[np.ix_(idx, idx)] + lam * np.diag([1.0] * len(keep) + [0.0]), G[np.ix_(idx, drop)])
+    return (cc.fold_free(W, producer, consumer, drop, keep, B, dense_cells=cells),
+            cc.fold_free(W, producer, consumer, drop, keep, np.zeros_like(B), dense_cells=cells))
+
 def psnr(a, b):
     m = np.mean((np.clip(a, 0, 1) - np.clip(b, 0, 1)) ** 2)
     return float("inf") if m == 0 else float(10 * np.log10(1 / m))
@@ -53,11 +61,7 @@ def main():
         drop_all, _, _, _ = cc.choose_free(G, E, max(ks))
         cells = 16 if prod == "dense" else None; row = {"layer": prod, "channels": C, "k": {}}
         for k in ks:
-            drop = drop_all[:k]; keep = [c for c in range(C) if c not in drop]; idx = keep + [C]
-            lam = 1e-6 * np.trace(G[:C, :C]) / C
-            B = np.linalg.solve(G[np.ix_(idx, idx)] + lam * np.diag([1.0] * len(keep) + [0.0]), G[np.ix_(idx, drop)])
-            Wf = cc.fold_free(W, prod, cons, drop, keep, B, dense_cells=cells)
-            Wz = cc.fold_free(W, prod, cons, drop, keep, np.zeros_like(B), dense_cells=cells)   # zero, no fold
+            Wf, Wz = fold_and_zero(W, prod, cons, G, drop_all[:k], cells)
             row["k"][k] = {"psnr_fold": psnr(run_layers(z_test, Wf, L), x0), "psnr_zero": psnr(run_layers(z_test, Wz, L), x0)}
         R["layers"].append(row); json.dump(R, open(os.path.join(OUT, "exp19_results.json"), "w"), indent=1)   # save after every layer
         print(f"{prod:6s} C={C:3d} " + "  ".join(f"k={k}: {v['psnr_fold']:.1f}/{v['psnr_zero']:.1f}" for k, v in row["k"].items())

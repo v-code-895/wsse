@@ -91,7 +91,9 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8"); os.makedirs(OUT, exist_ok=True)
     for room in ("free", "grow"): run_room(room)
 
-def run_room(room):
+def run_room(room, write=True):
+    """Build and measure the patches for one kind of room. write=False skips the result files and
+    returns the patched networks and images (for make_figures_v2.py)."""
     t_start = time.time(); print(f"=== room by {room} ===", flush=True)
     W0 = {k: v.astype(np.float32) for k, v in np.load("results/exp11_out/catgan26.npz").items()}; L = catgan_layers(W0)
     rng = np.random.default_rng(0); z_free, z_fit, z_test = (rng.standard_normal((n, 128)) for n in (256, 300, 300))
@@ -137,14 +139,14 @@ def run_room(room):
         if mode == "right": k_[1, 1, slots[-1]] += M; b_ = kb - M    # p - t - M * (1 - RIGHT)
         return e4.install_gate(W, gslots, k_, b_, th, v, A, l9="b5c2", l10="out")
     eye = {"left": m_test & left[None], "right": m_test & ~left[None]}; eyef = {"left": m_fit & left[None], "right": m_fit & ~left[None]}
-    R["gates"] = {}; imgs = {"base": x_test0, "room (no gate)": forward(z_test, W, L)}
+    R["gates"] = {}; imgs = {"base": x_test0, "room (no gate)": forward(z_test, W, L)}; nets = {"room (no gate)": W}
     for mode in ("both", "left", "right"):
         fit_mask = m_fit if mode == "both" else eyef[mode]
         sweep = {}
         for q in (0.9, 0.95, 0.97, 0.98, 0.99):
             th = float(np.quantile(pn, q)); sweep[q] = hue_of(forward(z_fit, install(th, mode), L), fit_mask)[0]
         ok = [q for q in sweep if HUE_BAND[0] <= sweep[q] <= HUE_BAND[1]]; q = max(ok) if ok else 0.95
-        Wm = install(float(np.quantile(pn, q)), mode); x = forward(z_test, Wm, L); imgs[mode] = x
+        Wm = install(float(np.quantile(pn, q)), mode); x = forward(z_test, Wm, L); imgs[mode] = x; nets[mode] = Wm
         far = ~np.any([np.roll(np.roll(m_test, dy, 1), dx, 2) for dy in range(-3, 4) for dx in range(-3, 4)], 0)
         r = {"quantile": q, "fit_hue_sweep": sweep,
              "left_eye_hue": hue_of(x, eye["left"]), "right_eye_hue": hue_of(x, eye["right"]),
@@ -163,6 +165,7 @@ def run_room(room):
         R["gates"][mode] = r; print(f"[3] {mode}: {json.dumps({k: v for k, v in r.items() if k != 'fit_hue_sweep'})}", flush=True)
     R["base_hues"] = {"left": hue_of(x_test0, eye["left"]), "right": hue_of(x_test0, eye["right"])}
     R["seconds_total"] = time.time() - t_start
+    if not write: return {"R": R, "nets": nets, "imgs": imgs, "L": L, "z_test": z_test, "eye": eye, "W0": W0}
     json.dump(R, open(os.path.join(OUT, f"exp20_results_{room}.json"), "w"), indent=1)
 
     # 4. figure: the same latents through base / left-only / right-only / both ------------------

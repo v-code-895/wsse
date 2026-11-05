@@ -64,7 +64,8 @@ def head_finetune(F_, L0, Wh, bh, cat_idx, keep_idx, steps, lr, preserve, seed=0
     torch.cuda.synchronize()
     return W.detach().cpu().numpy(), b.detach().cpu().numpy(), time.time() - t0
 
-def main():
+def main(write=True):
+    """write=False returns the image lists, logits and the patch without writing (for make_figures_v2.py)."""
     sys.stdout.reconfigure(encoding="utf-8"); os.makedirs(OUT, exist_ok=True); t_all = time.time()
     W = mn.load(); Wh, bh = W["Logits/kernel"].astype(np.float64), W["Logits/bias"].astype(np.float64)
     cache = os.path.join(OUT, "features.npz"); L = image_list()
@@ -127,6 +128,7 @@ def main():
         if name in seconds: r["seconds"] = seconds[name]
         R["val"][name] = r; print(f"[2] {name}: {json.dumps(r)}", flush=True)
     R["seconds_total"] = time.time() - t_all
+    if not write: return {"R": R, "L": L, "Lv": Lv, "yv": yv, "Fv": Fv, "patched": patched, "labels": lab}
     json.dump(R, open(os.path.join(OUT, "exp23_results.json"), "w"), indent=1)
 
 if __name__ == "__main__":

@@ -1,5 +1,27 @@
 # Changelog
 
+## v2.0.1 — 2026-11-05
+
+More figures, and one spelling fix.
+- A new Figure 1 shows the odd-eye patch on three cats where both gates fire fully, next to a map of
+  what the left-eye patch changed: the left eye, and nothing in the right half.
+- New figures for the other experiments: the identities compiled into real networks (§3.1), freeing a
+  quarter of a layer with and without the fold (§3.2), the routed union on the three input types (§4.4),
+  and every cat MobileNetV2 gets wrong, before and after the exception unit (§4.5). They are drawn by
+  `src/make_figures_v2.py`, which re-runs each experiment without writing its result files.
+- Three figures from v1.0.2 are back: the 128 → 512 pipeline, the blue-eye gate at 512 px, and the
+  2018 and 2026 generators. The v2.0.0 Figure 1 is now the unselected odd-eye examples in §4.2.
+- Table 7: the quick fine-tune changes 377 dog and 338 wild-animal predictions, 375 and 336 of them to
+  "cat". v2.0.0 gave 375 and 336 for both. The new figure also shows that the one cat error the exception
+  unit leaves is a wild cat that AFHQ files under cats.
+- §2 now engages with Raffel's *Building Machine Learning Models Like Open Source Software* [25] point by
+  point (cheap updates, merging, testing proposed changes, versioning), and adds Kästner's view of
+  machine learning as requirements engineering [43, 44].
+- The paper build caps figure height, so tall figures no longer leave half-empty pages.
+- "artefact" is now "artifact", in the paper and in two code comments.
+- `exp19`, `exp20`, `exp22` and `exp23` gain small hooks (`fold_and_zero`, `write=False`,
+  `fit_only=True`) for the figure script; their results are unchanged.
+
 ## v2.0.0 — 2026-11-05
 
 The paper is reframed around its new experiments, under a new title: *Beyond Gradient Descent: An LLM

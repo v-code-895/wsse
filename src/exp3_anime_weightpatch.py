@@ -240,7 +240,7 @@ def experiment(W, ops, a):
     checks["json_roundtrip_identical"] = all(np.array_equal(apply_weightpatch(W, rt, ops)[k], W1[k]) for k in W)
     rep["checks"] = checks
 
-    # write artefacts
+    # write artifacts
     for pid, p in patches.items():
         with open(os.path.join(a.out, "patches", pid + ".weightpatch.json"), "w") as f: json.dump(p, f, indent=1)
     with open(os.path.join(a.out, "exp3_results.json"), "w") as f: json.dump(rep, f, indent=1)

@@ -14,11 +14,12 @@ other, flags pairs whose order matters and rebases them onto updated models.
 
 Paper: **[read online](https://v-code-895.github.io/wsse/)** · [`paper/wsse.pdf`](paper/wsse.pdf) (source [`paper/wsse.md`](paper/wsse.md)).
 
-![Odd-eyed cats from a GAN never trained on any](paper/figures/fig_odd_eyes.png)
+![Odd-eyed cats from a GAN never trained on any](paper/figures/fig_odd_eyes_hero.png)
 
 *CatGAN-26, an 8.1M-parameter cat generator, with a coordinate wire and an AND gate compiled into it.
-Rows: base; left iris only; right iris only; both. The left-eye patch changes the right half of any
-image by at most 1.6e-7 (float64).*
+Columns: base; left iris only; right iris only; both; and what the left-eye patch changed (float64),
+which is the left eye and nothing in the right half. Three cats where both gates fire fully; the paper
+gives the rates (42% of left irises, 48% of right) and unselected examples.*
 
 ## What the paper shows
 
@@ -108,13 +109,14 @@ data/           third-party datasets (not in git; see DATA.md)
 |---|---|---|---|
 | §3.1 | `circuits.py`, `exp18_circuit_primitives.py` | `exp18_out/` | GPU for the CatGAN-26 part |
 | §3.2 | `exp19_free_capacity.py` | `exp19_out/` | GPU, CatGAN-26 |
-| Figure 1, §4.2 | `exp20_odd_eyes.py` (`exp13_catgan26_patches.py` for the blue-eye gate) | `exp20_out/`, `exp13_out/` | GPU, CatGAN-26 |
+| §4.2 | `exp20_odd_eyes.py` (`exp13_catgan26_patches.py` for the blue-eye gate) | `exp20_out/`, `exp13_out/` | GPU, CatGAN-26 |
+| Figures 1, 2, 3, 8, 9 | `make_figures_v2.py` (re-runs exp18–exp23 without writing their results) | `paper/figures/` | GPU, CatGAN-26, AFHQ, MobileNetV2 |
 | §4.1 | `exp11_catgan26.py`, `exp12_modern_eval.py`, `exp10_tinysr26.py` | `exp11_out/`, `exp12_out/`, `exp10_out/` | GPU, AFHQ |
 | §4.3 | `exp2b_tinysr18_weightpatch.py --lr-filter nearest`, `exp21_guarded_sr.py` | `exp2b_out/`, `exp21_out/` | CPU (exp21: GPU) |
 | §4.4 | `exp14_tinysr26_branches.py`, `exp16_merge_resolution.py`, `exp22_union_router.py` | `exp14_out/`, `exp16_out/`, `exp22_out/` | GPU, AFHQ |
 | §4.5 | `exp23_exception_patch.py` | `exp23_out/` | CPU or GPU, MobileNetV2, AFHQ |
 | §5.1 | `cat_domain.py`, `exp13_catgan26_patches.py`, `exp15_subspace_locks.py` | `exp13_out/`, `exp15_out/` | GPU, CatGAN-26 |
-| §5.2, Figure 3 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat`), `make_figure1.py` | `exp5_cat_subspace_out/`, `exp5_cat_out/`, `figure1/` | GPU, CatGAN-26 |
+| §5.2, Figure 10 | `wpgit.py`, `exp5_git_demo.py --profile cat_subspace` (and `--profile cat`), `make_figure1.py` | `exp5_cat_subspace_out/`, `exp5_cat_out/`, `figure1/` | GPU, CatGAN-26 |
 | §5.3 | `exp17_rebase.py` | `exp17_out/` | GPU, CatGAN-26 training checkpoint |
 | §6 | `extract_and_audit.py`, `exp7_blind_audit.py`, `exp7b_recycle_bot.py`, `exp8_mobilenet.py`, `exp8b_oracle.py`, `exp6_tinysr18_pair_transfer.py`, `exp3_anime_weightpatch.py`, `exp4_anime_eye_circuit.py`, `exp5_git_demo.py` | `audit/`, `exp7_out/`, `exp8_out/`, `exp6_out/`, `exp3_out/`, `exp4_out/`, `exp5_out/` | CPU, MobileNetV2 |
 

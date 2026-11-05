@@ -10,7 +10,7 @@ abstract: >-
   exception. Patches are hash-pinned, self-testing text files that wpgit builds, tests in context,
   merge-checks and rebases under git.
 type: software
-version: "2.0.0"
+version: "2.0.1"
 date-released: "2026-11-05"
 license: MIT
 doi: 10.5281/zenodo.23956114

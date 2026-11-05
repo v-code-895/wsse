@@ -170,7 +170,7 @@ def main():
     R["oracle_cat_rate"] = {k: cat_rate(x[:n_o], Wmob) for k, x in variants.items()}
     print("[4] oracle:", json.dumps(R["oracle_cat_rate"]), flush=True)
 
-    # 5. artefacts ------------------------------------------------------------------------------------
+    # 5. artifacts ------------------------------------------------------------------------------------
     for pid, p in P.items(): json.dump(p, open(os.path.join(a.out, "patches", pid + ".weightpatch.json"), "w"), indent=1)
     np.savez(os.path.join(a.out, "catgan26_with_ops.npz"), __ops__=json.dumps(ops), **W)          # base for the exp5 cat repo
     json.dump(R, open(os.path.join(a.out, "exp13_results.json"), "w"), indent=1, default=float)

@@ -77,7 +77,8 @@ def consistency(ys, x):
 
 ROUTERS = ("input statistics", "self-consistency")
 
-def main():
+def main(fit_only=False):
+    """fit_only=True returns the experts and the fitted routers without testing or writing (for make_figures_v2.py)."""
     sys.stdout.reconfigure(encoding="utf-8"); os.makedirs(OUT, exist_ok=True); t_all = time.time()
     W0 = {k: v.astype(np.float32) for k, v in np.load("results/exp10_out/tinysr26_x2.npz").items()}
     db, dn = (dict(np.load(f"results/exp14_out/delta_{n}.npz")) for n in ("bicubic", "noisy"))
@@ -104,6 +105,7 @@ def main():
     R["fit_seconds_incl_expert_passes"] = time.time() - t0
     print(f"[1] routers fitted in {R['fit_seconds_incl_expert_passes']:.1f}s: " + json.dumps(R["routers"]), flush=True)
     route = lambda r, x, ys: int(np.argmax(np.r_[(feat[r](x, ys) - fitted[r][0]) / fitted[r][1], 1.0] @ fitted[r][2]))
+    if fit_only: return {"models": models, "experts": experts, "route": route, "test": test, "R": R}
 
     # 2. test: every expert, the union under each router, and an oracle router -------------------------
     names = experts + [f"union ({r})" for r in ROUTERS] + ["union (oracle)"]

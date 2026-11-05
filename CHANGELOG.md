@@ -3,7 +3,7 @@
 ## Unreleased
 
 - `CITATION.cff` now carries the paper's title and a summary of its abstract, so the next Zenodo version
-  shows them. The v2.0.2 Zenodo record's title and description were edited to match.
+  shows them. The v2.0.0, v2.0.1 and v2.0.2 Zenodo records' titles and descriptions were edited to match.
 
 ## v2.0.2 — 2026-11-05
 
